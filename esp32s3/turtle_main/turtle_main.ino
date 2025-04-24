@@ -1,4 +1,3 @@
-
 #include <Preferences.h>
 #include <Wire.h>
 #include <Adafruit_GFX.h>
