@@ -1,0 +1,69 @@
+
+/* Default styling for larger screens */
+
+#basking-gauge,
+#water-gauge {
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 80%;
+    margin: auto;
+    display: block;
+    margin-bottom: 5px;
+}
+
+
+/* Adjust for smaller screens (e.g., tablets) */
+@media screen and (max-width: 768px) {
+
+    #basking-gauge,
+    #water-gauge {
+        width: 90%;
+        /* Increase the gauge width */
+        height: 200px;
+        /* Adjust height for better viewing */
+    }
+
+}
+
+/* Adjust for even smaller screens (e.g., phones) */
+@media screen and (max-width: 480px) {
+
+    #basking-gauge,
+    #water-gauge {
+        width: 95%;
+        /* Full width on small screens */
+        height: 250px;
+        /* Adjust height for small screens */
+        
+       
+    }
+}
+
+/* Make the buttons more responsive and center them */
+button {
+    padding: 15px;
+    font-size: 16px;
+    margin: 12px;
+}
+
+/* Adjust button size on smaller screens */
+@media screen and (max-width: 768px) {
+    button {
+        padding: 10px;
+        font-size: 14px;
+    }
+}
+
+/* Ensure the H1 is centered and appropriately sized */
+h1 {
+    font-size: 40px;
+    margin-bottom: 20px;
+}
+
+/* Adjust font size for smaller screens */
+@media screen and (max-width: 768px) {
+    h1 {
+        font-size: 24px;
+    }
+}
+

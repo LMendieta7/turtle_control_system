@@ -1,0 +1,26 @@
+nohup: ignoring input
+Connected with result code Success
+Dash is running on http://0.0.0.0:8050/
+
+ * Serving Flask app 'app'
+ * Debug mode: on
+Connected with result code Success
+Connected with result code Success
+Auto Mode is ON, feeding is disabled.
+Auto Mode is ON, feeding is disabled.
+Auto Mode is ON, feeding is disabled.
+Auto Mode is ON, feeding is disabled.
+Auto Mode is ON, feeding is disabled.
+Auto Mode is ON, feeding is disabled.
+Connected with result code Success
+Connected with result code Success
+Auto Mode is ON — manual toggle disabled.
+Auto Mode is ON — manual toggle disabled.
+Auto Mode is ON — manual toggle disabled.
+Connected with result code Success
+Connected with result code Success
+Connected with result code Success
+Connected with result code Success
+  File "/home/turtle/turtle_dashboard/app.py", line 44
+    sensor_data["feed_count"] = int(msg.payload.decode())
+IndentationError: expected an indented block after 'elif' statement on line 43
