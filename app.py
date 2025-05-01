@@ -12,7 +12,10 @@ sensor_data = {
     "light_status": "OFF", 
     "feeder_state": "IDLE", 
     "auto_mode": "on",
-    "feed_count": 0
+    "feed_count": 0,
+    "esp_ip": "N/A",
+    "wifi_status": "disconnected",
+    "mqtt_status": "disconnected"
 }
 
 # MQTT callback functions
@@ -24,6 +27,9 @@ def on_connect(client, userdata, flags, rc, properties):
     client.subscribe("turtle/feeder_state")
     client.subscribe("turtle/auto_mode_state")
     client.subscribe("turtle/feed_count")
+    client.subscribe("turtle/mqtt_status")
+    client.subscribe("turtle/wifi_status")
+    client.subscribe("turtle/esp_ip")
 
 
 
@@ -41,7 +47,14 @@ def on_message(client, userdata, msg):
         elif msg.topic == "turtle/auto_mode_state":
             sensor_data["auto_mode"] = msg.payload.decode()
         elif msg.topic == "turtle/feed_count":
-             sensor_data["feed_count"] = int(msg.payload.decode())
+            sensor_data["feed_count"] = int(msg.payload.decode())
+        elif msg.topic == "turtle/mqtt_status":
+            sensor_data["mqtt_status"] = msg.payload.decode()
+        elif msg.topic == "turtle/wifi_status":
+            sensor_data["wifi_status"] = msg.payload.decode()
+        elif msg.topic == "turtle/esp_ip":
+            sensor_data["esp_ip"] = msg.payload.decode()
+
 
     except ValueError:
         print(f"Invalid value received on {msg.topic}")
@@ -59,6 +72,12 @@ mqtt_client.loop_start()
 # Initialize Dash app
 app = dash.Dash(__name__)
 app.layout = html.Div([
+
+    html.Div([
+        html.Div(id='mqtt-status')    #  Style now handled in style.css
+    ], style={'position': 'relative'}),
+
+
     html.H1("Turtle Control System", style={'text-align': 'center'}),
     
     # Basking Temperature Gauge
@@ -103,6 +122,42 @@ app.layout = html.Div([
     dcc.Store(id='auto-mode-state-store', data='on')
 
 ])
+
+@app.callback(
+    Output('mqtt-status', 'children'),
+    Input('interval-update', 'n_intervals')
+)
+def update_status_display(n):
+    mqtt_status = sensor_data.get("mqtt_status", "disconnected")
+    wifi_status = sensor_data.get("wifi_status", "disconnected")
+    esp_ip = sensor_data.get("esp_ip", "N/A")
+
+    mqtt_color = "green" if mqtt_status == "connected" else "red"
+    wifi_color = "green" if wifi_status == "connected" else "red"
+
+    return html.Div([
+        html.Span("MQTT: ", style={"fontWeight": "bold"}),
+        html.Span(style={
+            "display": "inline-block",
+            "width": "10px",
+            "height": "10px",
+            "borderRadius": "50%",
+            "backgroundColor": mqtt_color,
+            "marginRight": "6px"
+        }, title="MQTT status"),
+        html.Br(),
+        html.Span("Wi-Fi: ", style={"fontWeight": "bold"}),
+        html.Span(style={
+            "display": "inline-block",
+            "width": "10px",
+            "height": "10px",
+            "borderRadius": "50%",
+            "backgroundColor": wifi_color,
+            "marginRight": "6px"
+        }, title="Wi-Fi status"),
+        html.Br(),
+        html.Span(f"ESP IP: {esp_ip}")
+    ])
 
 # Callbacks to update the temperature gauges
 @app.callback(

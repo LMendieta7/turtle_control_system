@@ -1,4 +1,3 @@
-
 /* Default styling for larger screens */
 
 #basking-gauge,
@@ -11,18 +10,14 @@
     margin-bottom: 5px;
 }
 
-
 /* Adjust for smaller screens (e.g., tablets) */
 @media screen and (max-width: 768px) {
 
     #basking-gauge,
     #water-gauge {
         width: 90%;
-        /* Increase the gauge width */
         height: 200px;
-        /* Adjust height for better viewing */
     }
-
 }
 
 /* Adjust for even smaller screens (e.g., phones) */
@@ -31,11 +26,7 @@
     #basking-gauge,
     #water-gauge {
         width: 95%;
-        /* Full width on small screens */
         height: 250px;
-        /* Adjust height for small screens */
-        
-       
     }
 }
 
@@ -60,10 +51,27 @@ h1 {
     margin-bottom: 20px;
 }
 
-/* Adjust font size for smaller screens */
 @media screen and (max-width: 768px) {
     h1 {
         font-size: 24px;
     }
 }
 
+/* Status bar style for MQTT/Wi-Fi/IP */
+#mqtt-status {
+    position: absolute;
+    top: 10px;
+    right: 20px;
+    font-size: 12px;
+    color: #333;
+    text-align: right;
+    z-index: 1000;
+}
+
+@media screen and (max-width: 480px) {
+    #mqtt-status {
+        font-size: 11px;
+        right: 10px;
+        top: 6px;
+    }
+}

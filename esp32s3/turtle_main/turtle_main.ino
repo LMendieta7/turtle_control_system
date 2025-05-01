@@ -6,24 +6,23 @@
 #include <DallasTemperature.h>
 #include <RTClib.h>
 #include <WiFi.h>
-#include <Fonts/FreeSans9pt7b.h>         // Include a font for OLED display
+#include <Fonts/FreeSans9pt7b.h> // Include a font for OLED display
 #include <WiFiUdp.h>
 #include <NTPClient.h>
 #include "esp_system.h"
 #include <PubSubClient.h>
 
-
-#define AIN1 16     // Motor direction pin
-#define AIN2 18     // Motor direction pin
-#define PWMA 15     // Motor speed (PWM)
-#define STBY 21     // Standby (enable motor)
-#define HALL_SENSOR 12  // Hall effect sensor pin
+#define AIN1 16        // Motor direction pin
+#define AIN2 18        // Motor direction pin
+#define PWMA 15        // Motor speed (PWM)
+#define STBY 21        // Standby (enable motor)
+#define HALL_SENSOR 12 // Hall effect sensor pin
 
 // MQTT Broker Settings
-const char* mqttServer = "10.0.0.130"; // IP address of your MQTT broker (e.g., Mosquitto)
-const int mqttPort = 1883; // Default MQTT port
+const char *mqttServer = "10.0.0.130"; // IP address of your MQTT broker (e.g., Mosquitto)
+const int mqttPort = 1883;             // Default MQTT port
 
-unsigned long lastReconnectAttempt = 0; // Track the last time we attempted to reconnect
+unsigned long lastReconnectAttempt = 0;        // Track the last time we attempted to reconnect
 const unsigned long reconnectInterval = 10000; // Time between reconnect attempts (5 seconds)
 
 // WiFi and MQTT Client Setup
@@ -32,10 +31,10 @@ PubSubClient client(espClient);
 
 const unsigned long TIMEOUT_MS = 13000; // Emergency stop after 14 seconds
 
-bool hasFedToday = false;  // Flag to track feeding
+bool hasFedToday = false; // Flag to track feeding
 bool motorRunning = false;
 volatile bool hallTriggered = false; // Interrupt flag
-int feedCount = 0; 
+int feedCount = 0;
 unsigned long motorStartTime = 0; // Track motor run time
 
 // Set feeding time (change this to your desired time)
@@ -45,7 +44,7 @@ bool autoModeEnabled = true;
 
 bool isConnected = false;
 
-unsigned long lastWiFiCheck = 0;  // Timer for WiFi reconnect
+unsigned long lastWiFiCheck = 0; // Timer for WiFi reconnect
 
 unsigned long lastRTCCheck = 0;
 const unsigned long checkRTCInterval = 1000; // Check every second
@@ -55,8 +54,8 @@ const unsigned long checkRTCInterval = 1000; // Check every second
 #define UV_LIGHT_PIN 2      // GPIO 2 for UV light
 
 // Light Schedule
-const int lightOnTime = 800;    // Lights turn on at 8am
-const int lightOffTime = 1800;  // Lights stay on for 10 hours 1800(6pm)
+const int lightOnTime = 800;   // Lights turn on at 8am
+const int lightOffTime = 1800; // Lights stay on for 10 hours 1800(6pm)
 
 // Declare preferences globally
 Preferences preferences;
@@ -83,18 +82,18 @@ DallasTemperature sensor1(&oneWire1);
 DallasTemperature sensor2(&oneWire2);
 
 RTC_DS3231 rtc;
-DateTime now;  // Global variable
+DateTime now; // Global variable
 
 // Set time zone for New York (Eastern Time with DST)
-const char* ntpServer = "pool.ntp.org";
-const long gmtOffset_sec = -5 * 3600;  // UTC-5 (Standard Time)
-const int daylightOffset_sec = 3600;   // +1 hour for DST
+const char *ntpServer = "pool.ntp.org";
+const long gmtOffset_sec = -5 * 3600; // UTC-5 (Standard Time)
+const int daylightOffset_sec = 3600;  // +1 hour for DST
 
-//ntp sync every 12 hours
+// ntp sync every 12 hours
 unsigned long lastSyncTime = 0;
-const unsigned long syncInterval = 3 * 60 * 60 * 1000;  // 3 hours in milliseconds
+const unsigned long syncInterval = 3 * 60 * 60 * 1000; // 3 hours in milliseconds
 
-// Timing variables for display data 
+// Timing variables for display data
 unsigned long previousMillis = 0;
 const long interval = 3000; // Update interval in milliseconds (2 second)
 
@@ -104,37 +103,54 @@ const unsigned long statusPublishInterval = 10000;
 volatile unsigned long lastHallTriggerTime = 0;
 const unsigned long debounceDelay = 200; // ms
 
-void publishStatus() {
+void publishStatus()
+{
   // Read only the basking pin for combined light state
   String lightStatus = (digitalRead(BASKING_LIGHT_PIN) == HIGH) ? "ON" : "OFF";
   client.publish("turtle/lights_state", lightStatus.c_str());
 
   // Feeder status
-  const char* feederStatus = motorRunning ? "RUNNING" : "IDLE";
+  const char *feederStatus = motorRunning ? "RUNNING" : "IDLE";
   client.publish("turtle/feeder_state", feederStatus);
 
   // Auto mode status
   client.publish("turtle/auto_mode_state", autoModeEnabled ? "on" : "off");
 
   client.publish("turtle/feed_count", String(feedCount).c_str());
+
+  // publish current IP
+  String ip = WiFi.localIP().toString();
+  client.publish("turtle/esp_ip", ip.c_str());
+
+  // wifi status
+  const char *wifiStatus = (WiFi.status() == WL_CONNECTED) ? "connected" : "disconnected";
+  client.publish("turtle/wifi_status", wifiStatus);
+
+  // mqtt status
+  const char *mqttStatus = client.connected() ? "connected" : "disconnected";
+  client.publish("turtle/mqtt_status", mqttStatus);
 }
 
-void IRAM_ATTR hallSensorISR() {
+void IRAM_ATTR hallSensorISR()
+{
   unsigned long now = millis();
-  if (motorRunning && (now - lastHallTriggerTime > debounceDelay)) {
+  if (motorRunning && (now - lastHallTriggerTime > debounceDelay))
+  {
     hallTriggered = true;
     lastHallTriggerTime = now;
   }
 }
 
-void runFeeder() {
-  if (motorRunning) return; // Prevent re-triggering
+void runFeeder()
+{
+  if (motorRunning)
+    return; // Prevent re-triggering
 
   Serial.println("Starting motor...");
   digitalWrite(STBY, HIGH); // Enable motor driver
   digitalWrite(AIN1, HIGH);
-  digitalWrite(AIN2, LOW); 
-  analogWrite(PWMA, 120);  
+  digitalWrite(AIN2, LOW);
+  analogWrite(PWMA, 120);
 
   motorRunning = true;
   hallTriggered = false;
@@ -142,28 +158,33 @@ void runFeeder() {
   publishStatus();
 }
 
-void stopMotor() {
+void stopMotor()
+{
   Serial.println("Stopping motor...");
-  analogWrite(PWMA, 0); 
+  analogWrite(PWMA, 0);
   digitalWrite(AIN1, LOW);
   digitalWrite(AIN2, LOW);
-  digitalWrite(STBY, LOW); 
+  digitalWrite(STBY, LOW);
 
-  motorRunning = false; 
+  motorRunning = false;
   feedCount++;
-  client.publish("turtle/feed_count", String(feedCount).c_str()); 
+  client.publish("turtle/feed_count", String(feedCount).c_str());
   publishStatus();
 }
 
 // Get free heap (available RAM)
-uint32_t getFreeHeap() {
-    return esp_get_free_heap_size();
+uint32_t getFreeHeap()
+{
+  return esp_get_free_heap_size();
 }
 
-void checkWiFi() {
-  if (WiFi.status() != WL_CONNECTED) {
+void checkWiFi()
+{
+  if (WiFi.status() != WL_CONNECTED)
+  {
     static unsigned long lastReconnectAttempt = 0;
-    if (millis() - lastReconnectAttempt >= 30000) { // Try reconnecting every 30 seconds
+    if (millis() - lastReconnectAttempt >= 30000)
+    { // Try reconnecting every 30 seconds
       lastReconnectAttempt = millis();
       Serial.println("WiFi Disconnected. Attempting to reconnect...");
       WiFi.disconnect();
@@ -173,50 +194,58 @@ void checkWiFi() {
 }
 
 // Function to turn on the lights
-void turnOnLights() {
-    digitalWrite(BASKING_LIGHT_PIN, HIGH); // Turn on basking light
-    digitalWrite(UV_LIGHT_PIN, HIGH); // Turn on UV light
-    publishStatus();  // Send status after turning on
-
+void turnOnLights()
+{
+  digitalWrite(BASKING_LIGHT_PIN, HIGH); // Turn on basking light
+  digitalWrite(UV_LIGHT_PIN, HIGH);      // Turn on UV light
+  publishStatus();                       // Send status after turning on
 }
 
 // Function to turn off the lights
-void turnOffLights() {
-    digitalWrite(BASKING_LIGHT_PIN, LOW); // Turn off basking light
-    digitalWrite(UV_LIGHT_PIN, LOW); // Turn off UV light
-    publishStatus();  
-
+void turnOffLights()
+{
+  digitalWrite(BASKING_LIGHT_PIN, LOW); // Turn off basking light
+  digitalWrite(UV_LIGHT_PIN, LOW);      // Turn off UV light
+  publishStatus();
 }
 
 // Function to initialize OLED
-void initializeOLED() {
-  if (!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) { // Change 0x3C to your OLED's I2C address if different
+void initializeOLED()
+{
+  if (!display.begin(SSD1306_SWITCHCAPVCC, 0x3C))
+  { // Change 0x3C to your OLED's I2C address if different
     Serial.println(F("SSD1306 allocation failed"));
-    for (;;);
+    for (;;)
+      ;
   }
- //display.display();
-  //delay(2000);
+  // display.display();
+  // delay(2000);
   display.clearDisplay();
   display.setTextSize(1);
   display.setTextColor(SSD1306_WHITE);
 }
 
 // Function to initialize DS18B20
-void initializeDS18B20() {
+void initializeDS18B20()
+{
   sensor1.begin();
   sensor2.begin();
 }
 
 // Function to initialize DS3231
-void initializeDS3231() {
-// Initialize RTC
-  if (!rtc.begin()) {
+void initializeDS3231()
+{
+  // Initialize RTC
+  if (!rtc.begin())
+  {
     Serial.println("Couldn't find RTC");
-    while (1);
+    while (1)
+      ;
   }
 
-  if (rtc.lostPower()) {
-    
+  if (rtc.lostPower())
+  {
+
     Serial.println("RTC lost power! Syncing from NTP...");
     syncTimeFromNTP();
   }
@@ -224,25 +253,27 @@ void initializeDS3231() {
   syncTimeFromNTP();
 }
 
-void syncTimeFromNTP() {
-  
+void syncTimeFromNTP()
+{
+
   configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
   struct tm timeinfo;
 
-  if (!getLocalTime(&timeinfo)) {
+  if (!getLocalTime(&timeinfo))
+  {
     Serial.println("Failed to obtain time from NTP. Using RTC instead.");
-   
-    return ;
+
+    return;
   }
 
   // Update DS3231 RTC with new time
   rtc.adjust(DateTime(timeinfo.tm_year + 1900, timeinfo.tm_mon + 1, timeinfo.tm_mday,
                       timeinfo.tm_hour, timeinfo.tm_min, timeinfo.tm_sec));
-
 }
 
 // Function to connect to Wi-Fi
-void connectToWiFi() {
+void connectToWiFi()
+{
   display.clearDisplay();
   display.setTextSize(1);
 
@@ -254,13 +285,15 @@ void connectToWiFi() {
 
   unsigned long startAttemptTime = millis(); // Track time since Wi-Fi attempt started
 
-  while (WiFi.status() != WL_CONNECTED && millis() - startAttemptTime < 20000) { // 10 second timeout
+  while (WiFi.status() != WL_CONNECTED && millis() - startAttemptTime < 20000)
+  {             // 10 second timeout
     delay(500); // Delay to prevent locking up CPU entirely
     display.print(".");
     display.display();
   }
 
-  if (WiFi.status() == WL_CONNECTED) {
+  if (WiFi.status() == WL_CONNECTED)
+  {
     // Successful connection
     display.clearDisplay();
     display.setTextSize(1);
@@ -272,7 +305,9 @@ void connectToWiFi() {
     display.print(WiFi.localIP());
     display.display();
     delay(2000); // Show Wi-Fi connection status for 2 seconds
-  } else {
+  }
+  else
+  {
     // Timeout case
     display.clearDisplay();
     display.setTextSize(1);
@@ -283,47 +318,58 @@ void connectToWiFi() {
   }
 }
 
-
 // Function to read temperature in Fahrenheit from a specific sensor
-int16_t readTemperatureF(DallasTemperature& sensor) {
+int16_t readTemperatureF(DallasTemperature &sensor)
+{
   sensor.requestTemperatures();
   int16_t tempF = sensor.getTempFByIndex(0);
   return tempF; // Classic integer math
 }
 
 // Function to format time in 12-hour format
-String formatTime12Hour(int hour, int minute) {
+String formatTime12Hour(int hour, int minute)
+{
   String period = (hour < 12) ? " AM" : " PM";
   hour = hour % 12;
-  if (hour == 0) hour = 12; // Convert 0 to 12 for 12-hour format
+  if (hour == 0)
+    hour = 12; // Convert 0 to 12 for 12-hour format
   return String(hour) + ":" + (minute < 10 ? "0" : "") + String(minute) + period;
 }
 
-void handleScheduledFeeding() {
- 
-  if (autoModeEnabled && now.hour() == feedHour && now.minute() == feedMinute && !hasFedToday) {
+void handleScheduledFeeding()
+{
+
+  if (autoModeEnabled && now.hour() == feedHour && now.minute() == feedMinute && !hasFedToday)
+  {
     Serial.println("Scheduled auto feeding time reached!");
     runFeeder();
     hasFedToday = true;
   }
 
-  if (now.hour() == 0 && now.minute() == 0) {
+  if (now.hour() == 0 && now.minute() == 0)
+  {
     hasFedToday = false;
     feedCount = 0;
   }
 }
 
-void handleLightSchedule() {
+void handleLightSchedule()
+{
   int currentTime = now.hour() * 100 + now.minute();
-  if (currentTime >= lightOnTime && currentTime < lightOffTime) {
+  if (currentTime >= lightOnTime && currentTime < lightOffTime)
+  {
     turnOnLights();
-  } else {
+  }
+  else
+  {
     turnOffLights();
   }
 }
 
-void sensorDisplayUpdate() {
-  if (millis() - previousMillis >= interval) {
+void sensorDisplayUpdate()
+{
+  if (millis() - previousMillis >= interval)
+  {
     previousMillis = millis();
 
     int16_t baskingTemp = readTemperatureF(sensor1);
@@ -332,54 +378,59 @@ void sensorDisplayUpdate() {
     // Convert to string for MQTT
     char baskingTempStr[8];
     char waterTempStr[8];
-    itoa(baskingTemp, baskingTempStr, 10);  // Convert basking temperature to string
-    itoa(waterTemp, waterTempStr, 10);  // Convert water temperature to string
-   
-   // Publish temperature to respective MQTT topics
-    client.publish("turtle/basking_temperature", baskingTempStr);  // Send basking temperature
-    client.publish("turtle/water_temperature", waterTempStr);  // Send basking temperature
-    
+    itoa(baskingTemp, baskingTempStr, 10); // Convert basking temperature to string
+    itoa(waterTemp, waterTempStr, 10);     // Convert water temperature to string
+
+    // Publish temperature to respective MQTT topics
+    client.publish("turtle/basking_temperature", baskingTempStr); // Send basking temperature
+    client.publish("turtle/water_temperature", waterTempStr);     // Send basking temperature
+
     displayData(baskingTemp, waterTemp, now);
   }
 }
 
-void handleMotorTimeout() {
-  if (motorRunning && (millis() - motorStartTime > TIMEOUT_MS)) {
+void handleMotorTimeout()
+{
+  if (motorRunning && (millis() - motorStartTime > TIMEOUT_MS))
+  {
     Serial.println("Motor timeout reached. Stopping motor.");
     stopMotor();
   }
 }
 
-void handleHallSensorTrigger() {
-  if (hallTriggered && motorRunning) {
+void handleHallSensorTrigger()
+{
+  if (hallTriggered && motorRunning)
+  {
     stopMotor(); // Stop motor if hall sensor is triggered
     hallTriggered = false;
-    
   }
 }
 
-void handleTimeSync() {
-  if (millis() - lastSyncTime >= syncInterval) {
+void handleTimeSync()
+{
+  if (millis() - lastSyncTime >= syncInterval)
+  {
     Serial.println("Syncing time with NTP...");
     syncTimeFromNTP();
     lastSyncTime = millis();
   }
 }
 
-
 // Function to display data on OLED
-void displayData(int16_t baskingTemp, int16_t waterTemp, DateTime now) {
+void displayData(int16_t baskingTemp, int16_t waterTemp, DateTime now)
+{
   display.clearDisplay();
   display.setFont(&FreeSans9pt7b);
-  
+
   display.setCursor(25, 12);
   display.print(formatTime12Hour(now.hour(), now.minute()));
-  
+
   display.setCursor(0, 33);
-  display.print("BT: "); 
+  display.print("BT: ");
   display.print(baskingTemp);
   display.print(" F");
-  
+
   display.setCursor(0, 54);
   display.print("WT: ");
   display.print(waterTemp);
@@ -389,92 +440,116 @@ void displayData(int16_t baskingTemp, int16_t waterTemp, DateTime now) {
   display.display();
 }
 
-void reconnectMQTT() {
-  if (client.connected()) {
-      return; // No need to reconnect if already connected
+void reconnectMQTT()
+{
+  if (client.connected())
+  {
+    return; // No need to reconnect if already connected
   }
 
   unsigned long currentMillis = millis();
-  
+
   // Only attempt reconnect if the interval has passed
-  if (currentMillis - lastReconnectAttempt >= reconnectInterval) {
-      lastReconnectAttempt = currentMillis;
+  if (currentMillis - lastReconnectAttempt >= reconnectInterval)
+  {
+    lastReconnectAttempt = currentMillis;
 
-      Serial.print("Attempting MQTT connection...");
+    Serial.print("Attempting MQTT connection...");
 
-      // Try to connect to MQTT broker
-      if (client.connect("ESP32_TestClient")) {
-          Serial.println("connected");
-          // Subscribe to topics (this can be adjusted to your needs)
-          client.subscribe("turtle/feed");
-          client.subscribe("turtle/lights");
-          client.subscribe("turtle/auto_mode");
+    // Try to connect to MQTT broker
+    if (client.connect("ESP32_TestClient"))
+    {
+      Serial.println("connected");
+      // Subscribe to topics (this can be adjusted to your needs)
+      client.subscribe("turtle/feed");
+      client.subscribe("turtle/lights");
+      client.subscribe("turtle/auto_mode");
 
-      } else {
-          Serial.print("failed, rc=");
-          Serial.print(client.state());
-          Serial.println(" try again in 5 seconds");
-      }
+      client.publish("turtle/mqtt_status", "connected");
+      const char *wifiStatus = (WiFi.status() == WL_CONNECTED) ? "connected" : "disconnected";
+      client.publish("turtle/wifi_status", wifiStatus);
+
+      String ip = WiFi.localIP().toString();
+      client.publish("turtle/esp_ip", ip.c_str());
+    }
+    else
+    {
+      Serial.print("failed, rc=");
+      Serial.print(client.state());
+      Serial.println(" try again in 5 seconds");
+    }
   }
 }
 
 // MQTT callback function
-void mqttCallback(char* topic, byte* payload, unsigned int length) {
+void mqttCallback(char *topic, byte *payload, unsigned int length)
+{
   String message = "";
-  for (unsigned int i = 0; i < length; i++) {
+  for (unsigned int i = 0; i < length; i++)
+  {
     message += (char)payload[i];
   }
-  
+
   Serial.print("Message received: ");
   Serial.println(message);
-  
+
   // Check the message and trigger feeder if "1" or "feed" is received
-  if (String(topic) == "turtle/feed") {
-    
-    if (autoModeEnabled) {
+  if (String(topic) == "turtle/feed")
+  {
+
+    if (autoModeEnabled)
+    {
       Serial.println("Feed request ignored — Auto Mode is ON");
       return;
     }
 
-    if (message == "1" || message == "feed") {
-      runFeeder();  // Call the runFeeder function
+    if (message == "1" || message == "feed")
+    {
+      runFeeder(); // Call the runFeeder function
     }
   }
 
   // MQTT callback check for auto mode
-  if (String(topic) == "turtle/auto_mode") {
-    if (message == "on") {
+  if (String(topic) == "turtle/auto_mode")
+  {
+    if (message == "on")
+    {
       autoModeEnabled = true;
     }
-    else if(message == "off") {
+    else if (message == "off")
+    {
       autoModeEnabled = false;
     }
-     // Always publish the actual state after changing it
+    // Always publish the actual state after changing it
     client.publish("turtle/auto_mode_state", autoModeEnabled ? "on" : "off");
   }
 
-  if (String(topic) == "turtle/lights") {
-    
-    if (autoModeEnabled) {
+  if (String(topic) == "turtle/lights")
+  {
+
+    if (autoModeEnabled)
+    {
       Serial.println("Light toggle ignored — Auto Mode is ON");
       return;
     }
-    
-    if (message == "ON") {
-      turnOnLights();   
 
-    } else if (message == "OFF") {
-      turnOffLights(); 
+    if (message == "ON")
+    {
+      turnOnLights();
+    }
+    else if (message == "OFF")
+    {
+      turnOffLights();
     }
   }
 }
 
-
-void setup() {
+void setup()
+{
   // Start Serial Monitor
   Serial.begin(9600);
   esp_sleep_disable_wakeup_source(ESP_SLEEP_WAKEUP_ALL);
-  
+
   // Initialize GPIO Pins
   pinMode(BASKING_LIGHT_PIN, OUTPUT);
   pinMode(UV_LIGHT_PIN, OUTPUT);
@@ -492,7 +567,7 @@ void setup() {
   // Initialize components
   initializeOLED();
   initializeDS18B20();
-  
+
   // Initialize Preferences
   preferences.begin("wifi-creds", true);
 
@@ -514,14 +589,14 @@ void setup() {
   // Setup MQTT
   client.setServer(mqttServer, mqttPort);
   client.setCallback(mqttCallback);
-  
-   // Attempt to connect to MQTT server
-  if (WiFi.status() == WL_CONNECTED) {
+
+  // Attempt to connect to MQTT server
+  if (WiFi.status() == WL_CONNECTED)
+  {
     reconnectMQTT();
   }
-  
- 
-  lastSyncTime = millis();  // Reset sync timer
+
+  lastSyncTime = millis(); // Reset sync timer
 
   display.clearDisplay();
   display.setTextSize(1);
@@ -541,35 +616,39 @@ void setup() {
   client.publish("turtle/auto_mode_state", autoModeEnabled ? "on" : "off");
 }
 
-void loop() {
-  
-  checkWiFi();         //  First, ensure Wi-Fi is connected
-  
-  if (WiFi.status() == WL_CONNECTED) {
-    reconnectMQTT();   //  Only try if Wi-Fi is okay
-    client.loop();     // MQTT processing
+void loop()
+{
+
+  checkWiFi(); //  First, ensure Wi-Fi is connected
+
+  if (WiFi.status() == WL_CONNECTED)
+  {
+    reconnectMQTT(); //  Only try if Wi-Fi is okay
+    client.loop();   // MQTT processing
   }
   handleMotorTimeout();
   handleHallSensorTrigger();
   handleTimeSync();
-  
+
   unsigned long currentMillis = millis();
-  if (currentMillis - lastRTCCheck >= checkRTCInterval) {
+  if (currentMillis - lastRTCCheck >= checkRTCInterval)
+  {
     lastRTCCheck = currentMillis;
 
     now = rtc.now();
     handleScheduledFeeding();
-    
-    if (autoModeEnabled){
+
+    if (autoModeEnabled)
+    {
       handleLightSchedule();
     }
   }
 
   sensorDisplayUpdate();
 
-  if (millis() - lastStatusPublish >= statusPublishInterval) {
+  if (millis() - lastStatusPublish >= statusPublishInterval)
+  {
     lastStatusPublish = millis();
-    publishStatus();  // Periodic status update
+    publishStatus(); // Periodic status update
   }
-  
 }
