@@ -31,6 +31,18 @@ sensor_timestamps = {
     "mqtt_status": 0
 }
 
+# Reset sensor values if stale
+def reset_stale_sensor_data(timeout=10):
+    now = time.time()
+    for key, ts in sensor_timestamps.items():
+        if now - ts > timeout:
+            if key in ["basking_temperature", "water_temperature", "feed_count"]:
+                sensor_data[key] = 0
+            elif key in ["esp_ip"]:
+                sensor_data[key] = "N/A"
+            else:
+                sensor_data[key] = "disconnected"
+
 
 # MQTT callback functions
 def on_connect(client, userdata, flags, rc, properties):
@@ -155,52 +167,42 @@ app.layout = html.Div([
     Input('interval-update', 'n_intervals')
 )
 def update_status_display(n):
-    now = time.time()
-    timeout = 10  # seconds
+    def update_status_display(n):
+        reset_stale_sensor_data(timeout=10)
 
-    # Reset stale data
-    for key, ts in sensor_timestamps.items():
-        if now - ts > timeout:
-            if key in ["basking_temperature", "water_temperature", "feed_count"]:
-                sensor_data[key] = 0
-            elif key in ["esp_ip"]:
-                sensor_data[key] = "N/A"
-            else:
-                sensor_data[key] = "disconnected"
+        mqtt_status = sensor_data.get("mqtt_status", "disconnected")
+        wifi_status = sensor_data.get("wifi_status", "disconnected")
+        esp_ip = sensor_data.get("esp_ip", "N/A")
 
-    mqtt_status = sensor_data.get("mqtt_status", "disconnected")
-    wifi_status = sensor_data.get("wifi_status", "disconnected")
-    esp_ip = sensor_data.get("esp_ip", "N/A")
-
-    mqtt_color = "green" if mqtt_status == "connected" else "red"
-    wifi_color = "green" if wifi_status == "connected" else "red"
-
-    return html.Div([
-        html.Span("MQTT: ", style={"fontWeight": "bold"}),
-        html.Span(style={
-            "display": "inline-block",
-            "width": "10px",
-            "height": "10px",
-            "borderRadius": "50%",
-            "backgroundColor": mqtt_color,
-            "marginRight": "5px"
-        }, title="MQTT status"),
-        html.Br(),
-        html.Span("WIFI: ", style={"fontWeight": "bold"}),
-        html.Span(style={
-            "display": "inline-block",
-            "width": "10px",
-            "height": "10px",
-            "borderRadius": "50%",
-            "backgroundColor": wifi_color,
-            "marginRight": "5px"
-        }, title="Wi-Fi status"),
-        html.Br(),
-        html.Span([
-            html.Span("IP: ", style={"fontWeight": "bold"}),
-            html.Span(esp_ip)
+        mqtt_color = "green" if mqtt_status == "connected" else "red"
+        wifi_color = "green" if wifi_status == "connected" else "red"
+        
+        return html.Div([
+            html.Span("MQTT: ", style={"fontWeight": "bold"}),
+            html.Span(style={
+                "display": "inline-block",
+                "width": "10px",
+                "height": "10px",
+                "borderRadius": "50%",
+                "backgroundColor": mqtt_color,
+                "marginRight": "5px"
+            }, title="MQTT status"),
+            html.Br(),
+            html.Span("WIFI: ", style={"fontWeight": "bold"}),
+            html.Span(style={
+                "display": "inline-block",
+                "width": "10px",
+                "height": "10px",
+                "borderRadius": "50%",
+                "backgroundColor": wifi_color,
+                "marginRight": "5px"
+            }, title="Wi-Fi status"),
+            html.Br(),
+            html.Span([
+                html.Span("IP: ", style={"fontWeight": "bold"}),
+                html.Span(esp_ip)
+            ])
         ])
-    ])
 
 # Callbacks to update the temperature gauges
 @app.callback(
