@@ -3,7 +3,7 @@ from dash import dcc, html, callback_context
 import plotly.graph_objects as go
 from dash.dependencies import Input, Output, State
 import paho.mqtt.client as mqtt
-
+import time
 
 # Global variables for sensor data
 sensor_data = {
@@ -17,6 +17,20 @@ sensor_data = {
     "wifi_status": "disconnected",
     "mqtt_status": "disconnected"
 }
+
+# Timestamps to track when each value was last updated
+sensor_timestamps = {
+    "basking_temperature": 0,
+    "water_temperature": 0,
+    "light_status": 0,
+    "feeder_state": 0,
+    "auto_mode": 0,
+    "feed_count": 0,
+    "esp_ip": 0,
+    "wifi_status": 0,
+    "mqtt_status": 0
+}
+
 
 # MQTT callback functions
 def on_connect(client, userdata, flags, rc, properties):
@@ -34,26 +48,39 @@ def on_connect(client, userdata, flags, rc, properties):
 
 
 def on_message(client, userdata, msg):
-    global sensor_data
+    global sensor_data, sensor_timestamps
     try:
-        if msg.topic == "turtle/basking_temperature":
-            sensor_data["basking_temperature"] = float(msg.payload.decode())
-        elif msg.topic == "turtle/water_temperature":
-            sensor_data["water_temperature"] = float(msg.payload.decode())
-        elif msg.topic == "turtle/lights_state":
-            sensor_data["light_status"] = msg.payload.decode()  # <-- Store it
-        elif msg.topic == "turtle/feeder_state":
-            sensor_data["feeder_state"] = msg.payload.decode()
-        elif msg.topic == "turtle/auto_mode_state":
-            sensor_data["auto_mode"] = msg.payload.decode()
-        elif msg.topic == "turtle/feed_count":
-            sensor_data["feed_count"] = int(msg.payload.decode())
-        elif msg.topic == "turtle/mqtt_status":
-            sensor_data["mqtt_status"] = msg.payload.decode()
-        elif msg.topic == "turtle/wifi_status":
-            sensor_data["wifi_status"] = msg.payload.decode()
-        elif msg.topic == "turtle/esp_ip":
-            sensor_data["esp_ip"] = msg.payload.decode()
+        topic = msg.topic
+        payload = msg.payload.decode()
+        now = time.time()
+
+        if topic == "turtle/basking_temperature":
+            sensor_data["basking_temperature"] = float(payload)
+            sensor_timestamps["basking_temperature"] = now
+        elif topic == "turtle/water_temperature":
+            sensor_data["water_temperature"] = float(payload)
+            sensor_timestamps["water_temperature"] = now
+        elif topic == "turtle/lights_state":
+            sensor_data["light_status"] = payload
+            sensor_timestamps["light_status"] = now
+        elif topic == "turtle/feeder_state":
+            sensor_data["feeder_state"] = payload
+            sensor_timestamps["feeder_state"] = now
+        elif topic == "turtle/auto_mode_state":
+            sensor_data["auto_mode"] = payload
+            sensor_timestamps["auto_mode"] = now
+        elif topic == "turtle/feed_count":
+            sensor_data["feed_count"] = int(payload)
+            sensor_timestamps["feed_count"] = now
+        elif topic == "turtle/esp_ip":
+            sensor_data["esp_ip"] = payload
+            sensor_timestamps["esp_ip"] = now
+        elif topic == "turtle/wifi_status":
+            sensor_data["wifi_status"] = payload
+            sensor_timestamps["wifi_status"] = now
+        elif topic == "turtle/mqtt_status":
+            sensor_data["mqtt_status"] = payload
+            sensor_timestamps["mqtt_status"] = now
 
 
     except ValueError:
@@ -128,6 +155,19 @@ app.layout = html.Div([
     Input('interval-update', 'n_intervals')
 )
 def update_status_display(n):
+    now = time.time()
+    timeout = 10  # seconds
+
+    # Reset stale data
+    for key, ts in sensor_timestamps.items():
+        if now - ts > timeout:
+            if key in ["basking_temperature", "water_temperature", "feed_count"]:
+                sensor_data[key] = 0
+            elif key in ["esp_ip"]:
+                sensor_data[key] = "N/A"
+            else:
+                sensor_data[key] = "disconnected"
+
     mqtt_status = sensor_data.get("mqtt_status", "disconnected")
     wifi_status = sensor_data.get("wifi_status", "disconnected")
     esp_ip = sensor_data.get("esp_ip", "N/A")
