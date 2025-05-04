@@ -143,20 +143,23 @@ def update_status_display(n):
             "height": "10px",
             "borderRadius": "50%",
             "backgroundColor": mqtt_color,
-            "marginRight": "6px"
+            "marginRight": "5px"
         }, title="MQTT status"),
         html.Br(),
-        html.Span("Wi-Fi: ", style={"fontWeight": "bold"}),
+        html.Span("WIFI: ", style={"fontWeight": "bold"}),
         html.Span(style={
             "display": "inline-block",
             "width": "10px",
             "height": "10px",
             "borderRadius": "50%",
             "backgroundColor": wifi_color,
-            "marginRight": "6px"
+            "marginRight": "5px"
         }, title="Wi-Fi status"),
         html.Br(),
-        html.Span(f"ESP IP: {esp_ip}")
+        html.Span([
+            html.Span("IP: ", style={"fontWeight": "bold"}),
+            html.Span(esp_ip)
+        ])
     ])
 
 # Callbacks to update the temperature gauges

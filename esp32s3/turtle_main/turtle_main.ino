@@ -29,7 +29,7 @@ const unsigned long reconnectInterval = 10000; // Time between reconnect attempt
 WiFiClient espClient;
 PubSubClient client(espClient);
 
-const unsigned long TIMEOUT_MS = 13000; // Emergency stop after 14 seconds
+const unsigned long TIMEOUT_MS = 12000; // Emergency stop after 12 seconds
 
 bool hasFedToday = false; // Flag to track feeding
 bool motorRunning = false;
