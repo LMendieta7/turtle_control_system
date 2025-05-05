@@ -167,7 +167,6 @@ app.layout = html.Div([
     Input('interval-update', 'n_intervals')
 )
 def update_status_display(n):
-<<<<<<< HEAD
         
     reset_stale_sensor_data(timeout=10)
 
@@ -198,38 +197,6 @@ def update_status_display(n):
             "backgroundColor": wifi_color,
             "marginRight": "5px"
         }, title="Wi-Fi status"),
-=======
-    
-    reset_stale_sensor_data(timeout=10)
-
-    mqtt_status = sensor_data.get("mqtt_status", "disconnected")
-    wifi_status = sensor_data.get("wifi_status", "disconnected")
-    esp_ip = sensor_data.get("esp_ip", "N/A")
-
-    mqtt_color = "green" if mqtt_status == "connected" else "red"
-    wifi_color = "green" if wifi_status == "connected" else "red"
-        
-    return html.Div([
-        html.Span("MQTT: ", style={"fontWeight": "bold"}),
-        html.Span(style={
-                "display": "inline-block",
-                "width": "10px",
-                "height": "10px",
-                "borderRadius": "50%",
-                "backgroundColor": mqtt_color,
-                "marginRight": "5px"
-            }, title="MQTT status"),
-        html.Br(),
-        html.Span("WIFI: ", style={"fontWeight": "bold"}),
-        html.Span(style={
-                "display": "inline-block",
-                "width": "10px",
-                "height": "10px",
-                "borderRadius": "50%",
-                "backgroundColor": wifi_color,
-                "marginRight": "5px"
-            }, title="Wi-Fi status"),
->>>>>>> 678412e5faa2304f10ae59a254d2acf442b95e8b
         html.Br(),
         html.Span([
             html.Span("IP: ", style={"fontWeight": "bold"}),
