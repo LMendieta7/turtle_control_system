@@ -22,7 +22,7 @@
 const char *mqttServer = "10.0.0.130"; // IP address of your MQTT broker (e.g., Mosquitto)
 const int mqttPort = 1883;             // Default MQTT port
 
-unsigned long lastReconnectAttempt = 0;        // Track the last time we attempted to reconnect
+unsigned long lastMQTTReconnectAttempt = 0;    // Track the last time we attempted to reconnect
 const unsigned long reconnectInterval = 10000; // Time between reconnect attempts (5 seconds)
 
 // WiFi and MQTT Client Setup
@@ -44,6 +44,7 @@ bool autoModeEnabled = true;
 
 bool isConnected = false;
 
+static unsigned long lastWIFIReconnectAttempt = 0;
 unsigned long lastWiFiCheck = 0; // Timer for WiFi reconnect
 
 unsigned long lastRTCCheck = 0;
@@ -95,10 +96,10 @@ const unsigned long syncInterval = 3 * 60 * 60 * 1000; // 3 hours in millisecond
 
 // Timing variables for display data
 unsigned long previousMillis = 0;
-const long interval = 3000; // Update interval in milliseconds (2 second)
+const long interval = 5000; // Update interval in milliseconds (2 second)
 
 unsigned long lastStatusPublish = 0;
-const unsigned long statusPublishInterval = 10000;
+const unsigned long statusPublishInterval = 8000;
 
 volatile unsigned long lastHallTriggerTime = 0;
 const unsigned long debounceDelay = 200; // ms
@@ -182,17 +183,15 @@ void checkWiFi()
 {
   if (WiFi.status() != WL_CONNECTED)
   {
-    static unsigned long lastReconnectAttempt = 0;
-    if (millis() - lastReconnectAttempt >= 30000)
+    if (millis() - lastWIFIReconnectAttempt >= 30000)
     { // Try reconnecting every 30 seconds
-      lastReconnectAttempt = millis();
+      lastWIFIReconnectAttempt = millis();
       Serial.println("WiFi Disconnected. Attempting to reconnect...");
       WiFi.reconnect();
+      delay(50);
     }
   }
-  else{
-    return;
-  }
+  delay(50);
 }
 
 // Function to turn on the lights
@@ -452,9 +451,9 @@ void reconnectMQTT()
   unsigned long currentMillis = millis();
 
   // Only attempt reconnect if the interval has passed
-  if (currentMillis - lastReconnectAttempt >= reconnectInterval)
+  if (currentMillis - lastMQTTReconnectAttempt >= reconnectInterval)
   {
-    lastReconnectAttempt = currentMillis;
+    lastMQTTReconnectAttempt = currentMillis;
 
     Serial.print("Attempting MQTT connection...");
 
@@ -480,6 +479,7 @@ void reconnectMQTT()
       Serial.print(client.state());
       Serial.println(" try again in 5 seconds");
     }
+    delay(100);
   }
 }
 
@@ -627,6 +627,7 @@ void loop()
   {
     reconnectMQTT(); //  Only try if Wi-Fi is okay
     client.loop();   // MQTT processing
+    delay(50);
   }
   handleMotorTimeout();
   handleHallSensorTrigger();
