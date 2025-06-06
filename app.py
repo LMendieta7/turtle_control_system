@@ -178,15 +178,8 @@ def update_status_display(n):
     
     return html.Div([
 
-        html.Div("ESP INFO", style={
-            "fontWeight": "bold",
-            "fontSize": "12px",
-            "marginBottom": "3px",
-            "color": "#007ACC"
-        }),
-
         html.Div([
-            html.Span("STATUS: ", style={"fontWeight": "bold", "color": "#007ACC"}),
+            html.Span("STATUS: ", style={"fontWeight": "bold", "color": "#0018CC"}),
             html.Span(style={
                 "display": "inline-block",
                 "width": "10px",
@@ -198,12 +191,12 @@ def update_status_display(n):
         ], style={"marginBottom": "2px"}),
 
         html.Div([
-            html.Span("IP: ", style={"fontWeight": "bold","color": "#007ACC"}),
+            html.Span("IP: ", style={"fontWeight": "bold", "color":  "#0018CC"}),
             html.Span(esp_ip)
         ], style={"marginBottom": "2px"}),
 
         html.Div([
-            html.Span("RAM: ", style={"fontWeight": "bold"}),
+            html.Span("RAM: ", style={"fontWeight": "bold", "color": "#0018CC"}),
             html.Span(heap)
         ])
     ])
