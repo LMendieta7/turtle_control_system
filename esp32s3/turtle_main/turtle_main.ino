@@ -29,7 +29,7 @@ const unsigned long reconnectInterval = 10000; // Time between reconnect attempt
 WiFiClient espClient;
 PubSubClient client(espClient);
 
-const unsigned long TIMEOUT_MS = 12000; // Emergency stop after 12 seconds
+const unsigned long TIMEOUT_MS = 13000; // Emergency stop after 12 seconds
 
 bool hasFedToday = false; // Flag to track feeding
 bool motorRunning = false;
@@ -187,9 +187,11 @@ void checkWiFi()
     { // Try reconnecting every 30 seconds
       lastReconnectAttempt = millis();
       Serial.println("WiFi Disconnected. Attempting to reconnect...");
-      WiFi.disconnect();
       WiFi.reconnect();
     }
+  }
+  else{
+    return;
   }
 }
 
@@ -286,7 +288,7 @@ void connectToWiFi()
   unsigned long startAttemptTime = millis(); // Track time since Wi-Fi attempt started
 
   while (WiFi.status() != WL_CONNECTED && millis() - startAttemptTime < 20000)
-  {             // 10 second timeout
+  {
     delay(500); // Delay to prevent locking up CPU entirely
     display.print(".");
     display.display();

@@ -49,7 +49,7 @@ def on_connect(client, userdata, flags, rc, properties):
     print(f"Connected with result code {rc}")
     client.subscribe("turtle/basking_temperature")  # Subscribe to basking temp
     client.subscribe("turtle/water_temperature")    # Subscribe to water temp
-    client.subscribe("turtle/lights_state")  # <-- Add this
+    client.subscribe("turtle/lights_state")  
     client.subscribe("turtle/feeder_state")
     client.subscribe("turtle/auto_mode_state")
     client.subscribe("turtle/feed_count")
@@ -174,8 +174,8 @@ def update_status_display(n):
     wifi_status = sensor_data.get("wifi_status", "disconnected")
     esp_ip = sensor_data.get("esp_ip", "N/A")
 
-    mqtt_color = "green" if mqtt_status == "connected" else "red"
-    wifi_color = "green" if wifi_status == "connected" else "red"
+    mqtt_color = "green" if mqtt_status == "connected" else "gray"
+    wifi_color = "green" if wifi_status == "connected" else "gray"
     
     return html.Div([
         html.Span("MQTT: ", style={"fontWeight": "bold"}),
@@ -188,7 +188,7 @@ def update_status_display(n):
             "marginRight": "5px"
         }, title="MQTT status"),
         html.Br(),
-        html.Span("WIFI: ", style={"fontWeight": "bold"}),
+        html.Span("ESP WIFI: ", style={"fontWeight": "bold"}),
         html.Span(style={
             "display": "inline-block",
             "width": "10px",
@@ -257,7 +257,7 @@ def feed_turtle(n_clicks, auto_mode):
 def update_feed_button(state):
     is_running = state == "RUNNING"
     label = "Feeding..." if is_running else "Feed Turtle"
-    color = "green" if is_running else "red"
+    color = "green" if is_running else "gray"
 
     return label, {
         'backgroundColor': color,
@@ -306,7 +306,7 @@ def update_light_status(n):
 def update_light_button(current_status):
     is_on = current_status == "ON"
     label = "Lights ON" if is_on else "Lights OFF"
-    color = "#FFD966" if is_on else "red"
+    color = "#FFD966" if is_on else "gray"
     label_color = "black" if is_on else "white"
     return label, {
         'margin': '8px',
