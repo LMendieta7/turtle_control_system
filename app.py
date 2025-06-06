@@ -178,15 +178,15 @@ def update_status_display(n):
     
     return html.Div([
 
-        html.Div("ESP Info", style={
+        html.Div("ESP INFO", style={
             "fontWeight": "bold",
-            "fontSize": "14px",
-            "marginBottom": "6px",
-            "color": "#333"
+            "fontSize": "12px",
+            "marginBottom": "3px",
+            "color": "#007ACC"
         }),
 
         html.Div([
-            html.Span("Status: ", style={"fontWeight": "bold", "color": "#007ACC"}),
+            html.Span("STATUS: ", style={"fontWeight": "bold", "color": "#007ACC"}),
             html.Span(style={
                 "display": "inline-block",
                 "width": "10px",
@@ -195,14 +195,16 @@ def update_status_display(n):
                 "backgroundColor": esp_color,
                 "marginLeft": "6px"
             })
-        ], style={"marginBottom": "3px"}),
+        ], style={"marginBottom": "2px"}),
 
         html.Div([
-            html.Span(f"IP: {esp_ip}", style={"fontWeight": "bold", "color": "#007ACC"}),
-        ], style={"marginBottom": "3px"}),
+            html.Span("IP: ", style={"fontWeight": "bold","color": "#007ACC"}),
+            html.Span(esp_ip)
+        ], style={"marginBottom": "2px"}),
 
         html.Div([
-            html.Span(f"Free RAM: {heap}", style={"fontWeight": "bold", "color": "#007ACC"}),
+            html.Span("RAM: ", style={"fontWeight": "bold"}),
+            html.Span(heap)
         ])
     ])
 
