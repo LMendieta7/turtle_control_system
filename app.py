@@ -14,7 +14,7 @@ sensor_data = {
     "auto_mode": "on",
     "feed_count": 0,
     "esp_ip": "N/A",
-    "wifi_status": "disconnected",
+    "heap": "N/A",
     "mqtt_status": "disconnected"
 }
 
@@ -27,7 +27,7 @@ sensor_timestamps = {
     "auto_mode": 0,
     "feed_count": 0,
     "esp_ip": 0,
-    "wifi_status": 0,
+    "heap": 0,
     "mqtt_status": 0
 }
 
@@ -54,9 +54,8 @@ def on_connect(client, userdata, flags, rc, properties):
     client.subscribe("turtle/auto_mode_state")
     client.subscribe("turtle/feed_count")
     client.subscribe("turtle/mqtt_status")
-    client.subscribe("turtle/wifi_status")
+    client.subscribe("turtle/heap")
     client.subscribe("turtle/esp_ip")
-
 
 
 def on_message(client, userdata, msg):
@@ -87,9 +86,9 @@ def on_message(client, userdata, msg):
         elif topic == "turtle/esp_ip":
             sensor_data["esp_ip"] = payload
             sensor_timestamps["esp_ip"] = now
-        elif topic == "turtle/wifi_status":
-            sensor_data["wifi_status"] = payload
-            sensor_timestamps["wifi_status"] = now
+        elif topic == "turtle/heap":
+            sensor_data["heap"] = payload
+            sensor_timestamps["heap"] = now
         elif topic == "turtle/mqtt_status":
             sensor_data["mqtt_status"] = payload
             sensor_timestamps["mqtt_status"] = now
@@ -166,42 +165,32 @@ app.layout = html.Div([
     Output('mqtt-status', 'children'),
     Input('interval-update', 'n_intervals')
 )
+
 def update_status_display(n):
         
     reset_stale_sensor_data(timeout=10)
 
-    mqtt_status = sensor_data.get("mqtt_status", "disconnected")
-    wifi_status = sensor_data.get("wifi_status", "disconnected")
+    esp_status = sensor_data.get("mqtt_status", "disconnected")
     esp_ip = sensor_data.get("esp_ip", "N/A")
+    heap = sensor_data.get("heap", "N/A")
 
-    mqtt_color = "green" if mqtt_status == "connected" else "gray"
-    wifi_color = "green" if wifi_status == "connected" else "gray"
+    esp_color = "green" if esp_status == "connected" else "gray"
     
     return html.Div([
-        html.Span("MQTT: ", style={"fontWeight": "bold"}),
+        html.Span("ESP Status: ", style={"fontWeight": "bold"}),
         html.Span(style={
             "display": "inline-block",
             "width": "10px",
             "height": "10px",
             "borderRadius": "50%",
-            "backgroundColor": mqtt_color,
+            "backgroundColor": esp_color,
             "marginRight": "5px"
-        }, title="MQTT status"),
+        }, title="ESP status"),
+        html.Span("ESP IP: ", style={"fontWeight": "bold"}),
+        html.Span(esp_ip),
         html.Br(),
-        html.Span("ESP WIFI: ", style={"fontWeight": "bold"}),
-        html.Span(style={
-            "display": "inline-block",
-            "width": "10px",
-            "height": "10px",
-            "borderRadius": "50%",
-            "backgroundColor": wifi_color,
-            "marginRight": "5px"
-        }, title="Wi-Fi status"),
-        html.Br(),
-        html.Span([
-            html.Span("IP: ", style={"fontWeight": "bold"}),
-            html.Span(esp_ip)
-        ])
+        html.Span("Free RAM: ", style={"fontWeight": "bold"}),
+        html.Span(heap)
     ])
 
 # Callbacks to update the temperature gauges
