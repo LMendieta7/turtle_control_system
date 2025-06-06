@@ -124,8 +124,8 @@ void publishStatus()
   const char *mqttStatus = client.connected() ? "connected" : "disconnected";
   client.publish("turtle/mqtt_status", mqttStatus);
 
-  // publish heap memory
-  client.publish("turtle/heap", String(getFreeHeap() / 1024) + " KB");
+  String heapStr = String(getFreeHeap() / 1024) + " KB";
+  client.publish("turtle/heap", heapStr.c_str());
 }
 
 void IRAM_ATTR hallSensorISR()
@@ -469,7 +469,9 @@ void reconnectMQTT()
       String ip = WiFi.localIP().toString();
       client.publish("turtle/esp_ip", ip.c_str());
 
-      client.publish("turtle/heap", String(getFreeHeap() / 1024) + " KB");
+      String heapStr = String(getFreeHeap() / 1024) + " KB";
+      client.publish("turtle/heap", heapStr.c_str());
+
     }
     else
     {
