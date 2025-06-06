@@ -42,10 +42,7 @@ int feedHour = 9;
 int feedMinute = 20;
 bool autoModeEnabled = true;
 
-bool isConnected = false;
-
 static unsigned long lastWIFIReconnectAttempt = 0;
-unsigned long lastWiFiCheck = 0; // Timer for WiFi reconnect
 
 unsigned long lastRTCCheck = 0;
 const unsigned long checkRTCInterval = 1000; // Check every second
@@ -123,13 +120,12 @@ void publishStatus()
   String ip = WiFi.localIP().toString();
   client.publish("turtle/esp_ip", ip.c_str());
 
-  // wifi status
-  const char *wifiStatus = (WiFi.status() == WL_CONNECTED) ? "connected" : "disconnected";
-  client.publish("turtle/wifi_status", wifiStatus);
-
   // mqtt status
   const char *mqttStatus = client.connected() ? "connected" : "disconnected";
   client.publish("turtle/mqtt_status", mqttStatus);
+
+  // publish heap memory
+  client.publish("turtle/heap", String(getFreeHeap() / 1024) + " KB");
 }
 
 void IRAM_ATTR hallSensorISR()
@@ -472,6 +468,8 @@ void reconnectMQTT()
 
       String ip = WiFi.localIP().toString();
       client.publish("turtle/esp_ip", ip.c_str());
+
+      client.publish("turtle/heap", String(getFreeHeap() / 1024) + " KB");
     }
     else
     {
