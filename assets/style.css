@@ -70,7 +70,7 @@ h1 {
 
 @media screen and (max-width: 480px) {
     #mqtt-status {
-        font-size: 12px;
+        font-size: 11px;
         right: 10px;
         top: 40px;
     }
