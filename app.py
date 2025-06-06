@@ -38,7 +38,7 @@ def reset_stale_sensor_data(timeout=10):
         if now - ts > timeout:
             if key in ["basking_temperature", "water_temperature", "feed_count"]:
                 sensor_data[key] = 0
-            elif key in ["esp_ip"]:
+            elif key in ["esp_ip", "heap"]:
                 sensor_data[key] = "N/A"
             else:
                 sensor_data[key] = "disconnected"
@@ -197,7 +197,7 @@ def update_status_display(n):
 @app.callback(
     [Output('basking-gauge', 'figure'),
      Output('water-gauge', 'figure')],
-    Input('interval-update', 'n_intervals')
+     Input('interval-update', 'n_intervals')
 )
 def update_gauges(n):
     global sensor_data
