@@ -177,20 +177,25 @@ def update_status_display(n):
     esp_color = "green" if esp_status == "connected" else "gray"
     
     return html.Div([
-        html.Span("ESP Status: ", style={"fontWeight": "bold"}),
-        html.Span(style={
-            "display": "inline-block",
-            "width": "10px",
-            "height": "10px",
-            "borderRadius": "50%",
-            "backgroundColor": esp_color,
-            "marginRight": "5px"
-        }, title="ESP status"),
-        html.Span("ESP IP: ", style={"fontWeight": "bold"}),
-        html.Span(esp_ip),
-        html.Br(),
-        html.Span("Free RAM: ", style={"fontWeight": "bold"}),
-        html.Span(heap)
+        html.Div([
+            html.Span("ESP STATUS: ", style={"fontWeight": "bold"}),
+            html.Span(style={
+                "display": "inline-block",
+                "width": "10px",
+                "height": "10px",
+                "borderRadius": "50%",
+                "backgroundColor": esp_color,
+                "marginLeft": "6px"
+            })
+        ], style={"marginBottom": "6px"}),
+
+        html.Div([
+            html.Span(f"ESP IP: {esp_ip}", style={"fontWeight": "bold"}),
+        ], style={"marginBottom": "6px"}),
+
+        html.Div([
+            html.Span(f"ESP RAM: {heap}", style={"fontWeight": "bold"}),
+        ])
     ])
 
 # Callbacks to update the temperature gauges
