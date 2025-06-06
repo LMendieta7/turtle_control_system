@@ -177,8 +177,16 @@ def update_status_display(n):
     esp_color = "green" if esp_status == "connected" else "gray"
     
     return html.Div([
+
+        html.Div("ESP Info", style={
+            "fontWeight": "bold",
+            "fontSize": "14px",
+            "marginBottom": "6px",
+            "color": "#333"
+        }),
+
         html.Div([
-            html.Span("ESP STATUS: ", style={"fontWeight": "bold"}),
+            html.Span("Status: ", style={"fontWeight": "bold", "color": "#007ACC"}),
             html.Span(style={
                 "display": "inline-block",
                 "width": "10px",
@@ -187,14 +195,14 @@ def update_status_display(n):
                 "backgroundColor": esp_color,
                 "marginLeft": "6px"
             })
-        ], style={"marginBottom": "6px"}),
+        ], style={"marginBottom": "3px"}),
 
         html.Div([
-            html.Span(f"ESP IP: {esp_ip}", style={"fontWeight": "bold"}),
-        ], style={"marginBottom": "6px"}),
+            html.Span(f"IP: {esp_ip}", style={"fontWeight": "bold", "color": "#007ACC"}),
+        ], style={"marginBottom": "3px"}),
 
         html.Div([
-            html.Span(f"ESP RAM: {heap}", style={"fontWeight": "bold"}),
+            html.Span(f"Free RAM: {heap}", style={"fontWeight": "bold", "color": "#007ACC"}),
         ])
     ])
 
