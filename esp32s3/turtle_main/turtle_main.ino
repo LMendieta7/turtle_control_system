@@ -23,7 +23,7 @@ const char *mqttServer = "10.0.0.130"; // IP address of your MQTT broker (e.g., 
 const int mqttPort = 1883;             // Default MQTT port
 
 unsigned long lastMQTTReconnectAttempt = 0;    // Track the last time we attempted to reconnect
-const unsigned long reconnectInterval = 10000; // Time between reconnect attempts (5 seconds)
+const unsigned long reconnectInterval = 15000; // Time between reconnect attempts (5 seconds)
 
 // WiFi and MQTT Client Setup
 WiFiClient espClient;
@@ -177,17 +177,16 @@ uint32_t getFreeHeap()
 
 void checkWiFi()
 {
-  if (WiFi.status() != WL_CONNECTED)
+  if (WiFi.status() == WL_CONNECTED)
+    return;
+
+  if (millis() - lastWIFIReconnectAttempt >= 30000)
   {
-    if (millis() - lastWIFIReconnectAttempt >= 30000)
-    { // Try reconnecting every 30 seconds
-      lastWIFIReconnectAttempt = millis();
-      Serial.println("WiFi Disconnected. Attempting to reconnect...");
-      WiFi.reconnect();
-      delay(50);
-    }
+    lastWIFIReconnectAttempt = millis();
+    Serial.println("WiFi Disconnected. Attempting to reconnect...");
+    WiFi.reconnect();
+    delay(20); // Just a tiny buffer if needed
   }
-  delay(50);
 }
 
 // Function to turn on the lights
@@ -471,7 +470,6 @@ void reconnectMQTT()
 
       String heapStr = String(getFreeHeap() / 1024) + " KB";
       client.publish("turtle/heap", heapStr.c_str());
-
     }
     else
     {
@@ -479,7 +477,7 @@ void reconnectMQTT()
       Serial.print(client.state());
       Serial.println(" try again in 5 seconds");
     }
-    delay(100);
+    delay(60);
   }
 }
 
@@ -620,14 +618,15 @@ void setup()
 
 void loop()
 {
+  checkWiFi();
+  bool wifiConnected = WiFi.status() == WL_CONNECTED;
 
-  checkWiFi(); //  First, ensure Wi-Fi is connected
+  if (wifiConnected)
 
-  if (WiFi.status() == WL_CONNECTED)
   {
     reconnectMQTT(); //  Only try if Wi-Fi is okay
     client.loop();   // MQTT processing
-    delay(50);
+    delay(20);
   }
   handleMotorTimeout();
   handleHallSensorTrigger();
