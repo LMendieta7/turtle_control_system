@@ -126,6 +126,9 @@ void publishStatus()
 
   String heapStr = String(getFreeHeap() / 1024) + " KB";
   client.publish("turtle/heap", heapStr.c_str());
+
+  // Publish raw uptime in ms
+  client.publish("turtle/esp_uptime_ms", String(millis()).c_str());
 }
 
 void IRAM_ATTR hallSensorISR()
@@ -436,40 +439,32 @@ void displayData(int16_t baskingTemp, int16_t waterTemp, DateTime now)
   display.display();
 }
 
+void subscribeToTopics()
+{
+  client.subscribe("turtle/feed");
+  client.subscribe("turtle/lights");
+  client.subscribe("turtle/auto_mode");
+}
+
 void reconnectMQTT()
 {
   if (client.connected())
   {
     return; // No need to reconnect if already connected
   }
-
   unsigned long currentMillis = millis();
-
   // Only attempt reconnect if the interval has passed
   if (currentMillis - lastMQTTReconnectAttempt >= reconnectInterval)
   {
     lastMQTTReconnectAttempt = currentMillis;
 
     Serial.print("Attempting MQTT connection...");
-
     // Try to connect to MQTT broker
     if (client.connect("ESP32_TestClient"))
     {
       Serial.println("connected");
-      // Subscribe to topics (this can be adjusted to your needs)
-      client.subscribe("turtle/feed");
-      client.subscribe("turtle/lights");
-      client.subscribe("turtle/auto_mode");
-
-      client.publish("turtle/mqtt_status", "connected");
-      const char *wifiStatus = (WiFi.status() == WL_CONNECTED) ? "connected" : "disconnected";
-      client.publish("turtle/wifi_status", wifiStatus);
-
-      String ip = WiFi.localIP().toString();
-      client.publish("turtle/esp_ip", ip.c_str());
-
-      String heapStr = String(getFreeHeap() / 1024) + " KB";
-      client.publish("turtle/heap", heapStr.c_str());
+      subscribeToTopics();
+      publishStatus();
     }
     else
     {
