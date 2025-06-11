@@ -55,6 +55,8 @@ const unsigned long checkRTCInterval = 1000; // Check every second
 const int lightOnTime = 800;   // Lights turn on at 8am
 const int lightOffTime = 1800; // Lights stay on for 10 hours 1800(6pm)
 
+bool lightsAreOn = false;
+
 // Declare preferences globally
 Preferences preferences;
 
@@ -79,6 +81,9 @@ OneWire oneWire2(ONE_WIRE_BUS_2);
 DallasTemperature sensor1(&oneWire1);
 DallasTemperature sensor2(&oneWire2);
 
+int16_t globalBaskingTemp = 0;
+int16_t globalWaterTemp = 0;
+
 RTC_DS3231 rtc;
 DateTime now; // Global variable
 
@@ -92,14 +97,20 @@ unsigned long lastSyncTime = 0;
 const unsigned long syncInterval = 3 * 60 * 60 * 1000; // 3 hours in milliseconds
 
 // Timing variables for display data
-unsigned long previousMillis = 0;
-const long interval = 5000; // Update interval in milliseconds (2 second)
+
+unsigned long lastTempRequestTime = 0;
+bool tempConversionInProgress = false;
+unsigned long lastReadTemp;
+const unsigned long readTempInterval = 5000;
+
+unsigned long lastOledUpdate;
+const unsigned long oledUpInterval = 3000;
 
 unsigned long lastStatusPublish = 0;
 const unsigned long statusPublishInterval = 8000;
 
 volatile unsigned long lastHallTriggerTime = 0;
-const unsigned long debounceDelay = 200; // ms
+const unsigned long debounceDelay = 300; // ms
 
 void publishStatus()
 {
@@ -155,7 +166,9 @@ void runFeeder()
   motorRunning = true;
   hallTriggered = false;
   motorStartTime = millis(); // Start tracking time
-  publishStatus();
+                             // ublishStatus();
+  const char *feederStatus = motorRunning ? "RUNNING" : "IDLE";
+  client.publish("turtle/feeder_state", feederStatus);
 }
 
 void stopMotor()
@@ -169,7 +182,9 @@ void stopMotor()
   motorRunning = false;
   feedCount++;
   client.publish("turtle/feed_count", String(feedCount).c_str());
-  publishStatus();
+  // blishStatus();
+  const char *feederStatus = motorRunning ? "RUNNING" : "IDLE";
+  client.publish("turtle/feeder_state", feederStatus);
 }
 
 // Get free heap (available RAM)
@@ -188,24 +203,33 @@ void checkWiFi()
     lastWIFIReconnectAttempt = millis();
     Serial.println("WiFi Disconnected. Attempting to reconnect...");
     WiFi.reconnect();
-    delay(20); // Just a tiny buffer if needed
+    delay(10); // Just a tiny buffer if needed
   }
 }
 
 // Function to turn on the lights
 void turnOnLights()
 {
-  digitalWrite(BASKING_LIGHT_PIN, HIGH); // Turn on basking light
-  digitalWrite(UV_LIGHT_PIN, HIGH);      // Turn on UV light
-  publishStatus();                       // Send status after turning on
+  if (!lightsAreOn)
+  {
+    digitalWrite(BASKING_LIGHT_PIN, HIGH); // Turn on basking light
+    digitalWrite(UV_LIGHT_PIN, HIGH);      // Turn on UV light
+    lightsAreOn = true;
+    publishStatus();
+  }
+  // Send status after turning on
 }
 
 // Function to turn off the lights
 void turnOffLights()
 {
-  digitalWrite(BASKING_LIGHT_PIN, LOW); // Turn off basking light
-  digitalWrite(UV_LIGHT_PIN, LOW);      // Turn off UV light
-  publishStatus();
+  if (lightsAreOn)
+  {
+    digitalWrite(BASKING_LIGHT_PIN, LOW); // Turn off basking light
+    digitalWrite(UV_LIGHT_PIN, LOW);      // Turn off UV light
+    lightsAreOn = false;
+    publishStatus();
+  }
 }
 
 // Function to initialize OLED
@@ -229,8 +253,34 @@ void initializeDS18B20()
 {
   sensor1.begin();
   sensor2.begin();
+  sensor1.setWaitForConversion(false);  // Non-blocking
+  sensor2.setWaitForConversion(false);
 }
 
+void readTemperature() {
+  //if (motorRunning) return;  // Avoid blocking feeder logic
+
+  unsigned long nowMs = millis();
+
+  // Step 1: Start temp conversion (assumed interval handled externally)
+  if (!tempConversionInProgress) {
+    sensor1.requestTemperatures();
+    sensor2.requestTemperatures();
+    tempConversionInProgress = true;
+    lastTempRequestTime = nowMs;  // Now used for the 750ms delay only
+    return;
+  }
+
+  // Step 2: After 750ms, read temps
+  if (tempConversionInProgress && (nowMs - lastTempRequestTime >= 750)) {
+    globalBaskingTemp = (int16_t)round(sensor1.getTempFByIndex(0));
+    globalWaterTemp   = (int16_t)round(sensor2.getTempFByIndex(0));
+    tempConversionInProgress = false;
+
+    client.publish("turtle/basking_temperature", String(globalBaskingTemp).c_str());
+    client.publish("turtle/water_temperature", String(globalWaterTemp).c_str());
+  }
+}
 // Function to initialize DS3231
 void initializeDS3231()
 {
@@ -317,14 +367,6 @@ void connectToWiFi()
   }
 }
 
-// Function to read temperature in Fahrenheit from a specific sensor
-int16_t readTemperatureF(DallasTemperature &sensor)
-{
-  sensor.requestTemperatures();
-  int16_t tempF = sensor.getTempFByIndex(0);
-  return tempF; // Classic integer math
-}
-
 // Function to format time in 12-hour format
 String formatTime12Hour(int hour, int minute)
 {
@@ -365,29 +407,28 @@ void handleLightSchedule()
   }
 }
 
-void sensorDisplayUpdate()
+void OledDisplayUpdate()
 {
-  if (millis() - previousMillis >= interval)
-  {
-    previousMillis = millis();
+    display.clearDisplay();
+    display.setFont(&FreeSans9pt7b);
 
-    int16_t baskingTemp = readTemperatureF(sensor1);
-    int16_t waterTemp = readTemperatureF(sensor2);
+    display.setCursor(25, 12);
+    display.print(formatTime12Hour(now.hour(), now.minute()));
 
-    // Convert to string for MQTT
-    char baskingTempStr[8];
-    char waterTempStr[8];
-    itoa(baskingTemp, baskingTempStr, 10); // Convert basking temperature to string
-    itoa(waterTemp, waterTempStr, 10);     // Convert water temperature to string
+    display.setCursor(0, 33);
+    display.print("BT: ");
+    display.print(globalBaskingTemp);
+    display.print(" F");
 
-    // Publish temperature to respective MQTT topics
-    client.publish("turtle/basking_temperature", baskingTempStr); // Send basking temperature
-    client.publish("turtle/water_temperature", waterTempStr);     // Send basking temperature
+    display.setCursor(0, 54);
+    display.print("WT: ");
+    display.print(globalWaterTemp);
+    display.print("F fc:");
+    display.print(feedCount);
 
-    displayData(baskingTemp, waterTemp, now);
+    display.display();
+    
   }
-}
-
 void handleMotorTimeout()
 {
   if (motorRunning && (millis() - motorStartTime > TIMEOUT_MS))
@@ -472,7 +513,7 @@ void reconnectMQTT()
       Serial.print(client.state());
       Serial.println(" try again in 5 seconds");
     }
-    delay(60);
+    delay(5);
   }
 }
 
@@ -609,11 +650,14 @@ void setup()
   display.display();
   delay(3000);
   client.publish("turtle/auto_mode_state", autoModeEnabled ? "on" : "off");
+  readTemperature();
+  delay(2);
 }
 
 void loop()
 {
   checkWiFi();
+  handleHallSensorTrigger();
   bool wifiConnected = WiFi.status() == WL_CONNECTED;
 
   if (wifiConnected)
@@ -621,13 +665,13 @@ void loop()
   {
     reconnectMQTT(); //  Only try if Wi-Fi is okay
     client.loop();   // MQTT processing
-    delay(20);
+    delay(5);
   }
   handleMotorTimeout();
-  handleHallSensorTrigger();
   handleTimeSync();
 
   unsigned long currentMillis = millis();
+  
   if (currentMillis - lastRTCCheck >= checkRTCInterval)
   {
     lastRTCCheck = currentMillis;
@@ -641,9 +685,20 @@ void loop()
     }
   }
 
-  sensorDisplayUpdate();
+  if (millis() - lastReadTemp >= readTempInterval)
+  {
+    lastReadTemp = millis();
+    readTemperature();
+  }
 
-  if (millis() - lastStatusPublish >= statusPublishInterval)
+  if (millis() - lastOledUpdate >= oledUpInterval)
+  {
+    lastOledUpdate = millis();
+    OledDisplayUpdate();
+
+  }
+
+ if (millis() - lastStatusPublish >= statusPublishInterval)
   {
     lastStatusPublish = millis();
     publishStatus(); // Periodic status update
