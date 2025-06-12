@@ -161,7 +161,7 @@ void runFeeder()
   digitalWrite(STBY, HIGH); // Enable motor driver
   digitalWrite(AIN1, HIGH);
   digitalWrite(AIN2, LOW);
-  analogWrite(PWMA, 120);
+  analogWrite(PWMA, 130);
 
   motorRunning = true;
   hallTriggered = false;
@@ -253,28 +253,31 @@ void initializeDS18B20()
 {
   sensor1.begin();
   sensor2.begin();
-  sensor1.setWaitForConversion(false);  // Non-blocking
+  sensor1.setWaitForConversion(false); // Non-blocking
   sensor2.setWaitForConversion(false);
 }
 
-void readTemperature() {
-  //if (motorRunning) return;  // Avoid blocking feeder logic
+void readTemperature()
+{
+  // if (motorRunning) return;  // Avoid blocking feeder logic
 
   unsigned long nowMs = millis();
 
   // Step 1: Start temp conversion (assumed interval handled externally)
-  if (!tempConversionInProgress) {
+  if (!tempConversionInProgress)
+  {
     sensor1.requestTemperatures();
     sensor2.requestTemperatures();
     tempConversionInProgress = true;
-    lastTempRequestTime = nowMs;  // Now used for the 750ms delay only
+    lastTempRequestTime = nowMs; // Now used for the 750ms delay only
     return;
   }
 
   // Step 2: After 750ms, read temps
-  if (tempConversionInProgress && (nowMs - lastTempRequestTime >= 750)) {
+  if (tempConversionInProgress && (nowMs - lastTempRequestTime >= 750))
+  {
     globalBaskingTemp = (int16_t)round(sensor1.getTempFByIndex(0));
-    globalWaterTemp   = (int16_t)round(sensor2.getTempFByIndex(0));
+    globalWaterTemp = (int16_t)round(sensor2.getTempFByIndex(0));
     tempConversionInProgress = false;
 
     client.publish("turtle/basking_temperature", String(globalBaskingTemp).c_str());
@@ -409,26 +412,25 @@ void handleLightSchedule()
 
 void OledDisplayUpdate()
 {
-    display.clearDisplay();
-    display.setFont(&FreeSans9pt7b);
+  display.clearDisplay();
+  display.setFont(&FreeSans9pt7b);
 
-    display.setCursor(25, 12);
-    display.print(formatTime12Hour(now.hour(), now.minute()));
+  display.setCursor(25, 12);
+  display.print(formatTime12Hour(now.hour(), now.minute()));
 
-    display.setCursor(0, 33);
-    display.print("BT: ");
-    display.print(globalBaskingTemp);
-    display.print(" F");
+  display.setCursor(0, 33);
+  display.print("BT: ");
+  display.print(globalBaskingTemp);
+  display.print(" F");
 
-    display.setCursor(0, 54);
-    display.print("WT: ");
-    display.print(globalWaterTemp);
-    display.print("F fc:");
-    display.print(feedCount);
+  display.setCursor(0, 54);
+  display.print("WT: ");
+  display.print(globalWaterTemp);
+  display.print("F fc:");
+  display.print(feedCount);
 
-    display.display();
-    
-  }
+  display.display();
+}
 void handleMotorTimeout()
 {
   if (motorRunning && (millis() - motorStartTime > TIMEOUT_MS))
@@ -671,7 +673,7 @@ void loop()
   handleTimeSync();
 
   unsigned long currentMillis = millis();
-  
+
   if (currentMillis - lastRTCCheck >= checkRTCInterval)
   {
     lastRTCCheck = currentMillis;
@@ -695,10 +697,9 @@ void loop()
   {
     lastOledUpdate = millis();
     OledDisplayUpdate();
-
   }
 
- if (millis() - lastStatusPublish >= statusPublishInterval)
+  if (millis() - lastStatusPublish >= statusPublishInterval)
   {
     lastStatusPublish = millis();
     publishStatus(); // Periodic status update
