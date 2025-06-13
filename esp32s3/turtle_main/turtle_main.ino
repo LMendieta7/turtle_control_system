@@ -34,13 +34,13 @@ const unsigned long TIMEOUT_MS = 13000; // Emergency stop after 12 seconds
 bool hasFedToday = false; // Flag to track feeding
 bool motorRunning = false;
 volatile bool hallTriggered = false; // Interrupt flag
-int feedCount = 0;
 unsigned long motorStartTime = 0; // Track motor run time
 
 // Set feeding time (change this to your desired time)
 int feedHour = 9;
 int feedMinute = 20;
 bool autoModeEnabled = true;
+int feedCount = 0;
 
 static unsigned long lastWIFIReconnectAttempt = 0;
 
@@ -166,9 +166,7 @@ void runFeeder()
   motorRunning = true;
   hallTriggered = false;
   motorStartTime = millis(); // Start tracking time
-                             // ublishStatus();
-  const char *feederStatus = motorRunning ? "RUNNING" : "IDLE";
-  client.publish("turtle/feeder_state", feederStatus);
+  client.publish("turtle/feeder_state", "RUNNING");
 }
 
 void stopMotor()
@@ -181,10 +179,16 @@ void stopMotor()
 
   motorRunning = false;
   feedCount++;
-  client.publish("turtle/feed_count", String(feedCount).c_str());
-  // blishStatus();
-  const char *feederStatus = motorRunning ? "RUNNING" : "IDLE";
-  client.publish("turtle/feeder_state", feederStatus);
+
+  preferences.begin("config", false);
+  if (preferences.getInt("feedCount", -1) != feedCount) {
+    preferences.putInt("feedCount", feedCount);
+  }
+  preferences.end();
+  
+  client.publish("turtle/feed_count", String(feedCount).c_str(), true);
+  //const char *feederStatus = motorRunning ? "RUNNING" : "IDLE";
+  client.publish("turtle/feeder_state", "IDLE");
 }
 
 // Get free heap (available RAM)
@@ -215,7 +219,8 @@ void turnOnLights()
     digitalWrite(BASKING_LIGHT_PIN, HIGH); // Turn on basking light
     digitalWrite(UV_LIGHT_PIN, HIGH);      // Turn on UV light
     lightsAreOn = true;
-    publishStatus();
+    String lightStatus = (digitalRead(BASKING_LIGHT_PIN) == HIGH) ? "ON" : "OFF";
+    client.publish("turtle/lights_state", lightStatus.c_str());
   }
   // Send status after turning on
 }
@@ -228,7 +233,8 @@ void turnOffLights()
     digitalWrite(BASKING_LIGHT_PIN, LOW); // Turn off basking light
     digitalWrite(UV_LIGHT_PIN, LOW);      // Turn off UV light
     lightsAreOn = false;
-    publishStatus();
+    String lightStatus = (digitalRead(BASKING_LIGHT_PIN) == HIGH) ? "ON" : "OFF";
+    client.publish("turtle/lights_state", lightStatus.c_str());
   }
 }
 
@@ -426,7 +432,7 @@ void OledDisplayUpdate()
   display.setCursor(0, 54);
   display.print("WT: ");
   display.print(globalWaterTemp);
-  display.print("F fc:");
+  display.print(" F fc:");
   display.print(feedCount);
 
   display.display();
@@ -508,6 +514,7 @@ void reconnectMQTT()
       Serial.println("connected");
       subscribeToTopics();
       publishStatus();
+    
     }
     else
     {
@@ -550,16 +557,21 @@ void mqttCallback(char *topic, byte *payload, unsigned int length)
   // MQTT callback check for auto mode
   if (String(topic) == "turtle/auto_mode")
   {
-    if (message == "on")
-    {
-      autoModeEnabled = true;
-    }
-    else if (message == "off")
-    {
-      autoModeEnabled = false;
-    }
-    // Always publish the actual state after changing it
-    client.publish("turtle/auto_mode_state", autoModeEnabled ? "on" : "off");
+     bool newAutoMode = (message == "on");
+
+    if (newAutoMode != autoModeEnabled) {
+      autoModeEnabled = newAutoMode;
+
+      // Save to Preferences
+      preferences.begin("config", false);
+      preferences.putBool("autoMode", autoModeEnabled);
+      preferences.end();
+
+      //Serial.println("Auto mode updated and saved.");
+  }
+
+  // Always publish updated state (retained)
+  client.publish("turtle/auto_mode_state", autoModeEnabled ? "on" : "off", true);
   }
 
   if (String(topic) == "turtle/lights")
@@ -612,8 +624,12 @@ void setup()
   // Retrieve Wi-Fi credentials
   ssid = preferences.getString("ssid", "");
   password = preferences.getString("password", "");
-
   // Close Preferences
+  preferences.end();
+
+  preferences.begin("config", false);
+  feedCount = preferences.getInt("feedCount", 0);  // ← Updates global variable
+  autoModeEnabled = preferences.getBool("autoMode", true);
   preferences.end();
 
   // Connect to Wi-Fi
@@ -651,9 +667,7 @@ void setup()
   display.println(" KB");
   display.display();
   delay(3000);
-  client.publish("turtle/auto_mode_state", autoModeEnabled ? "on" : "off");
-  readTemperature();
-  delay(2);
+  // client.publish("turtle/auto_mode_state", autoModeEnabled ? "on" : "off");
 }
 
 void loop()
