@@ -221,7 +221,7 @@ def update_gauges(n):
      # **Tighten the internal margins and shrink height**
     basking_fig.update_layout(
         margin=dict(l=10, r=10, t=10, b=10),
-        height=100
+        height=200
     )
     
     water_fig = go.Figure(go.Indicator(
@@ -235,7 +235,7 @@ def update_gauges(n):
         # **Same margin/height tweak here**
     water_fig.update_layout(
         margin=dict(l=10, r=10, t=10, b=10),
-        height=100
+        height=200
     )
 
     
