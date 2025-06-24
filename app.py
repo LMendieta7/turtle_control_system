@@ -119,10 +119,10 @@ app.layout = html.Div([
     html.H1("Turtle Control System", style={'text-align': 'center'}),
     
     # Basking Temperature Gauge
-    dcc.Graph(id='basking-gauge', config={'displayModeBar': False}, style={'width': '100%','margin': '10px'}),
+    dcc.Graph(id='basking-gauge', config={'displayModeBar': False}, style={'width': '100%'}),
     
     # Water Temperature Gauge
-    dcc.Graph(id='water-gauge', config={'displayModeBar': False},  style={'width': '100%', 'margin': '10px'}),
+    dcc.Graph(id='water-gauge', config={'displayModeBar': False},  style={'width': '100%'}),
     
         # Control Buttons
     html.Div([
