@@ -11,7 +11,7 @@ body {
 
 /* Default styling for larger screens */
 
-#basking-gauge,
+/*#basking-gauge,
 #water-gauge {
     margin: 0 !important;
     padding: 0 !important;
