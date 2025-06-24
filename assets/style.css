@@ -1,4 +1,14 @@
 
+/* ─── Global Overrides ─── */
+body {
+    background-color: #dddddd !important;
+}
+
+#basking-gauge,
+#water-gauge {
+    margin: 4px auto !important;
+    padding: 0 !important; }
+
 /* Default styling for larger screens */
 
 #basking-gauge,
