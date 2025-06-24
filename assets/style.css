@@ -1,6 +1,6 @@
 /* 1) Whole‐page background */
 body,
-div {
+html {
     background-color: #f5f5f5;
     /* pick any light color you like */ }
 
@@ -77,6 +77,11 @@ h1 {
 @media screen and (max-width: 480px) {
 
 /* 2) Pull the two gauges closer together */
+
+    body{
+        background-color: #f5f5f5;
+        /* pick any light color you like */ }
+
     #basking-gauge,
     #water-gauge {
         margin-top: 0px !important;
