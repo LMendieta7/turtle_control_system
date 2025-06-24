@@ -217,6 +217,12 @@ def update_gauges(n):
         gauge={'axis': {'range': [45, 105], 'tickvals': list(range(0, 111, 10)),}, 'bar': {'color': "red"}},
         number={'suffix': "°F"}  # Append °F after the value
     ))
+
+     # **Tighten the internal margins and shrink height**
+    basking_fig.update_layout(
+        margin=dict(l=20, r=20, t=20, b=20),
+        height=200
+    )
     
     water_fig = go.Figure(go.Indicator(
         mode="gauge+number",
@@ -225,6 +231,13 @@ def update_gauges(n):
         gauge={'axis': {'range': [45, 105], 'tickvals': list(range(0, 111, 10)), }, 'bar': {'color': "blue"}},
         number={'suffix': "°F"}  # Append °F after the value
     ))
+
+        # **Same margin/height tweak here**
+    water_fig.update_layout(
+        margin=dict(l=20, r=20, t=20, b=20),
+        height=200
+    )
+
     
     return basking_fig, water_fig
 
