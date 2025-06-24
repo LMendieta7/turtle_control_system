@@ -207,59 +207,40 @@ def update_status_display(n):
      Output('water-gauge', 'figure')],
      Input('interval-update', 'n_intervals')
 )
-@app.callback(
-    [Output('basking-gauge', 'figure'),
-     Output('water-gauge', 'figure')],
-    Input('interval-update', 'n_intervals')
-)
 def update_gauges(n):
-    # … read sensor_data …
-
-    # Common gauge background color
-    face_color = "#e0e0e0"
-
-    # 1) Basking gauge
+    global sensor_data
+    
     basking_fig = go.Figure(go.Indicator(
-        domain={'x': [0, 1], 'y': [0, 0.75]},
         mode="gauge+number",
         value=sensor_data["basking_temperature"],
-        title={'text': "Basking Temp", 'font': {'size': 20}, 'y': 0.9},
-        gauge={
-            'axis':   {'range': [45, 105], 'tickvals': list(range(50, 101, 10))},
-            'bar':    {'color': "red"},
-            'bgcolor': face_color,         # ← gauge “face”
-        },
-        number={'suffix': "°F"}
+        title={'text': "Basking Temp", 'font': {'size': 24}},
+        gauge={'axis': {'range': [45, 105], 'tickvals': list(range(0, 111, 10)),}, 'bar': {'color': "red"}},
+        number={'suffix': "°F"}  # Append °F after the value
     ))
-    basking_fig.update_layout(
-        paper_bgcolor=face_color,         # ← entire figure bg
-        plot_bgcolor=face_color,          # ← plot area bg
-        margin={'l': 0, 'r': 0, 't': 40, 'b': 0},
-        height=240
-    )
 
-    # 2) Water gauge (same pattern)
+     # **Tighten the internal margins and shrink height**
+    basking_fig.update_layout(
+        margin=dict(l=15, r=15, t=20, b=15),
+        height=200
+    )
+    
     water_fig = go.Figure(go.Indicator(
-        domain={'x': [0, 1], 'y': [0, 0.75]},
         mode="gauge+number",
         value=sensor_data["water_temperature"],
-        title={'text': "Water Temp", 'font': {'size': 20}, 'y': 0.9},
-        gauge={
-            'axis':   {'range': [45, 105], 'tickvals': list(range(50, 101, 10))},
-            'bar':    {'color': "blue"},
-            'bgcolor': face_color,
-        },
-        number={'suffix': "°F"}
+        title={'text': "Water Temp", 'font': {'size': 24}},
+        gauge={'axis': {'range': [45, 105], 'tickvals': list(range(0, 111, 10)), }, 'bar': {'color': "blue"}, 'bgcolor': "gray",},
+        
+        number={'suffix': "°F"}  # Append °F after the value
     ))
+
+        # **Same margin/height tweak here**
     water_fig.update_layout(
-        paper_bgcolor=face_color,
-        plot_bgcolor=face_color,
-        margin={'l': 0, 'r': 0, 't': 40, 'b': 0},
-        height=240
+        margin=dict(l=15, r=15, t=20, b=15),
+        height=200
     )
 
+    
     return basking_fig, water_fig
-
 
 # Publish feed command
 @app.callback(
