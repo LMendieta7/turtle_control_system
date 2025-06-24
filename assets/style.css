@@ -1,3 +1,8 @@
+/* 1) Whole‐page background */
+body {
+    background-color: #f5f5f5;
+    /* pick any light color you like */ }
+
 /* Default styling for larger screens */
 
 #basking-gauge,
@@ -69,6 +74,15 @@ h1 {
 }
 
 @media screen and (max-width: 480px) {
+
+/* 2) Pull the two gauges closer together */
+    #basking-gauge,
+    #water-gauge {
+        margin-top: 5px !important;
+        margin-bottom: 5px !important;
+        padding: 0 !important;
+    }
+
     #mqtt-status {
         font-size: 11px;
         right: 10px;
