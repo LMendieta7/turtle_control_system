@@ -220,7 +220,7 @@ def update_gauges(n):
 
      # **Tighten the internal margins and shrink height**
     basking_fig.update_layout(
-        margin=dict(l=10, r=10, t=10, b=10),
+        margin=dict(l=15, r=15, t=15, b=15),
         height=200
     )
     
@@ -234,7 +234,7 @@ def update_gauges(n):
 
         # **Same margin/height tweak here**
     water_fig.update_layout(
-        margin=dict(l=10, r=10, t=10, b=10),
+        margin=dict(l=15, r=15, t=15, b=15),
         height=200
     )
 
