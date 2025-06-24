@@ -77,13 +77,6 @@ h1 {
 
 @media screen and (max-width: 480px) {
 
-    #basking-gauge,
-    #water-gauge {
-        margin-top: 0px !important;
-        margin-bottom: 0px !important;
-        padding: 0 !important;
-    }
-
     #mqtt-status {
         font-size: 11px;
         right: 10px;
