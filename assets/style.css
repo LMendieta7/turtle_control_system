@@ -1,8 +1,4 @@
 
-/* ─── Global Overrides ─── */
-body {
-    background-color: #dddddd !important;
-}
 
 #basking-gauge,
 #water-gauge {
@@ -11,7 +7,7 @@ body {
 
 /* Default styling for larger screens */
 
-/*#basking-gauge,
+#basking-gauge,
 #water-gauge {
     margin: 0 !important;
     padding: 0 !important;
