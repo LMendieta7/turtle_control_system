@@ -19,7 +19,7 @@
 #define HALL_SENSOR 12 // Hall effect sensor pin
 
 // MQTT Broker Settings
-const char *mqttServer = "10.0.0.130"; // IP address of your MQTT broker (e.g., Mosquitto)
+const char *mqttServer = "172.22.80.5"; // IP address of your MQTT broker (e.g., Mosquitto)
 const int mqttPort = 1883;             // Default MQTT port
 
 unsigned long lastMQTTReconnectAttempt = 0;    // Track the last time we attempted to reconnect
