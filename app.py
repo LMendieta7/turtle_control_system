@@ -215,7 +215,7 @@ def update_gauges(n):
         value=sensor_data["basking_temperature"],
         title={'text': "Basking Temp", 'font': {'size': 18,'color': 'black'}},
         gauge={'axis': {'range': [45, 105], 'tickvals': list(range(0, 111, 10)),}, 'bar': {'color': "red"}},
-        number={'suffix': "°F",'font': {'size': 44}}  # Append °F after the value
+        number={'suffix': "°F",'font': {'size': 42}}  # Append °F after the value
     ))
     
     water_fig = go.Figure(go.Indicator(
@@ -223,16 +223,16 @@ def update_gauges(n):
         value=sensor_data["water_temperature"],
         title={'text': "Water Temp", 'font': {'size': 18, 'color': 'black'}},
         gauge={'axis': {'range': [45, 105], 'tickvals': list(range(0, 111, 10)), }, 'bar': {'color': "blue"}},
-        number={'suffix': "°F", 'font': {'size': 44}}  # Append °F after the value
+        number={'suffix': "°F", 'font': {'size': 42}}  # Append °F after the value
     ))
 
     basking_fig.update_layout(
-        margin={'l':75,'r':75,'t':42,'b':0},
+        margin={'l':78,'r':78,'t':42,'b':0},
         paper_bgcolor='#f5f5f5',   # light gray canvas
         plot_bgcolor='#f5f5f5'     # light gray plot area
     )
     water_fig.update_layout(
-        margin={'l':75,'r':75,'t':42,'b':0},
+        margin={'l':78,'r':78,'t':42,'b':0},
         paper_bgcolor='#f5f5f5',
         plot_bgcolor='#f5f5f5'
     )
@@ -319,7 +319,7 @@ def update_light_button(current_status):
     label_color = "black" if is_on else "white"
     return label, {
         'margin': '8px',
-        'margin-left': '15px',
+        'margin-left': '35px',
         'padding': '10px 16px',
         'backgroundColor': color,
         'color': label_color,
