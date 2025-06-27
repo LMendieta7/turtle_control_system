@@ -26,7 +26,7 @@ h1 {
     }
 
     #auto-toggle-btn{
-        margin-top: 20px;
+        margin-top: 30px;
         margin-bottom: 5px;
     }
 
@@ -51,10 +51,18 @@ h1 {
         top: 50px;
     }
 
+    #ligh-btn{
+        margin-left: 40px;
+    }
+
+    #feed-btn{
+        margin-right: 40px;
+    }
+
     #light-btn,
     #feed-btn {
         
         height: 53px;
-        
+
     }
 }

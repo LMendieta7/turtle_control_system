@@ -271,7 +271,6 @@ def update_feed_button(state):
     return label, {
         'backgroundColor': color,
         'color': 'white',
-        'margin': '8px',
         'padding': '10px 16px',
         'fontSize': '14px',
         'border': 'none',
@@ -318,8 +317,7 @@ def update_light_button(current_status):
     color = "#FFD966" if is_on else "gray"
     label_color = "black" if is_on else "white"
     return label, {
-        'margin': '8px',
-        'margin-left': '35px',
+
         'padding': '10px 16px',
         'backgroundColor': color,
         'color': label_color,
