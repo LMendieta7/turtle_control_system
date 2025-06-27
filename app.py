@@ -213,17 +213,17 @@ def update_gauges(n):
     basking_fig = go.Figure(go.Indicator(
         mode="gauge+number",
         value=sensor_data["basking_temperature"],
-        title={'text': "Basking Temp", 'font': {'size': 20}},
+        title={'text': "Basking Temp", 'font': {'size': 18}},
         gauge={'axis': {'range': [45, 105], 'tickvals': list(range(0, 111, 10)),}, 'bar': {'color': "red"}},
-        number={'suffix': "°F"}  # Append °F after the value
+        number={'suffix': "°F",'font': {'size': 46}}  # Append °F after the value
     ))
     
     water_fig = go.Figure(go.Indicator(
         mode="gauge+number",
         value=sensor_data["water_temperature"],
-        title={'text': "Water Temp", 'font': {'size': 20}},
+        title={'text': "Water Temp", 'font': {'size': 18}},
         gauge={'axis': {'range': [45, 105], 'tickvals': list(range(0, 111, 10)), }, 'bar': {'color': "blue"}},
-        number={'suffix': "°F"}  # Append °F after the value
+        number={'suffix': "°F", 'font': {'size': 46}}  # Append °F after the value
     ))
 
     basking_fig.update_layout(
