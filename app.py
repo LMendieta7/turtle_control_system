@@ -104,7 +104,7 @@ mqtt_client.on_connect = on_connect
 mqtt_client.on_message = on_message
 
 # Connect to MQTT broker
-mqtt_client.connect("127.0.0.1", 1883, 60)
+mqtt_client.connect("172.22.80.5", 1883, 60)
 mqtt_client.loop_start()
 
 # Initialize Dash app
@@ -119,16 +119,16 @@ app.layout = html.Div([
     html.H1("Turtle Control System", style={'text-align': 'center'}),
     
     # Basking Temperature Gauge
-    dcc.Graph(id='basking-gauge', config={'displayModeBar': False}, style={'width': '100%'}),
+    dcc.Graph(id='basking-gauge', config={'displayModeBar': False}),
     
     # Water Temperature Gauge
-    dcc.Graph(id='water-gauge', config={'displayModeBar': False},  style={'width': '100%'}),
+    dcc.Graph(id='water-gauge', config={'displayModeBar': False}),
     
         # Control Buttons
     html.Div([
-        html.Button('Feed Turtle', id='feed-btn', n_clicks=0, style={'margin':'12px', 'padding': '12px'}),
+        html.Button('Feed Turtle', id='feed-btn', n_clicks=0),
         
-        html.Button('Turn Light ON', id='light-btn', n_clicks=0, style={'margin': '12px', 'padding': '12px'})
+        html.Button('Turn Light ON', id='light-btn', n_clicks=0)
     ], style={'text-align': 'center', 'margin-top':'0px'}),
 
 
@@ -145,7 +145,7 @@ app.layout = html.Div([
     }),
     
     html.Div(id='feed-count-display'),
-    html.Div(id="auto-status", style={"marginTop": "10px", "color": "#333"})
+    html.Div(id="auto-status", style={"marginTop": "20px", "color": "#333"})
     ], style={'text-align': 'center'}),
 
     # Store for auto mode status
@@ -228,13 +228,11 @@ def update_gauges(n):
 
     basking_fig.update_layout(
         margin={'l':70,'r':70,'t':42,'b':0},
-        height=190,
         paper_bgcolor='#f5f5f5',   # light gray canvas
         plot_bgcolor='#f5f5f5'     # light gray plot area
     )
     water_fig.update_layout(
         margin={'l':70,'r':70,'t':42,'b':0},
-        height=190,
         paper_bgcolor='#f5f5f5',
         plot_bgcolor='#f5f5f5'
     )
@@ -278,7 +276,7 @@ def update_feed_button(state):
         'fontSize': '14px',
         'border': 'none',
         'borderRadius': '8px',
-        'width': '110px'
+        'width': '105px'
     }
 
 
@@ -321,13 +319,14 @@ def update_light_button(current_status):
     label_color = "black" if is_on else "white"
     return label, {
         'margin': '8px',
+        'margin-left': '15px',
         'padding': '10px 16px',
         'backgroundColor': color,
         'color': label_color,
         'fontSize': '14px',
         'border': 'none',
         'borderRadius': '8px',
-        'width': '110px'
+        'width': '105px'
         
     }
 

@@ -22,26 +22,39 @@ h1 {
 
     h1 {
         font-size: 30px;
+        color:darkblue;
+    }
+
+    #auto-toggle-btn{
+        margin-top: 20px;
+        margin-bottom: 5px;
     }
 
     #basking-gauge,
     #water-gauge {
         width: 100%;
-        height: 250px;
+        height: 220px;
+    }
+    
+    #basking-gauge{
+        margin-top: 55px;
+
     }
 
-    #mqtt-status {
+    #water-gauge {
+        margin-bottom: 22px;
+    }
+
+     #mqtt-status {
         font-size: 11px;
         right: 10px;
-        top: 45px;
+        top: 50px;
+    }
+
+    #light-btn,
+    #feed-btn {
+        
+        height: 55px;
+        
     }
 }
-
-/* Make the buttons more responsive and center them */
-button {
-    padding: 15px;
-    font-size: 16px;
-    margin: 12px;
-}
-
-
