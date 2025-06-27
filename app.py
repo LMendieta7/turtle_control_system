@@ -314,7 +314,7 @@ def update_light_status(n):
 )
 def update_light_button(current_status):
     is_on = current_status == "ON"
-    label = "Lights ON" if is_on else "Lights OFF"
+    label = "Lights OFF" if is_on else "Lights ON"
     color = "#FFD966" if is_on else "gray"
     label_color = "black" if is_on else "white"
     return label, {
