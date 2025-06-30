@@ -7,6 +7,11 @@ h1 {
     margin-bottom: 40px;
 }
 
+#gauge-container {
+    width: 100%;
+    margin: 0 auto;
+    padding: 0;
+}
 /* Status bar style for MQTT/Wi-Fi/IP */
 #mqtt-status {
     position: absolute;
@@ -30,33 +35,35 @@ h1 {
         margin-bottom: 5px;
     }
 
+ 
     #basking-gauge,
     #water-gauge {
         width: 100%;
-        height: 220px;
+        height: 220px !important;
     }
-    
-    #basking-gauge{
+
+    #basking-gauge {
         margin-top: 55px;
 
     }
 
     #water-gauge {
-        margin-bottom: 22px;
+        margin-bottom: 25px;
     }
 
-     #mqtt-status {
+
+    #mqtt-status {
         font-size: 11px;
         right: 10px;
         top: 50px;
     }
 
-    #ligh-btn{
-        margin-left: 40px;
+    #light-btn{
+        margin-left: 21px;
     }
 
     #feed-btn{
-        margin-right: 40px;
+        margin-right: 21px;
     }
 
     #light-btn,
