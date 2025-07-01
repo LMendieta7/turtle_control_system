@@ -23,6 +23,6 @@ navbar = html.Div([
 def update_active_link(path):
     return [
         "nav-link active" if path == "/" else "nav-link",
-        "nav-link active" if path.startswith("/temperatures") else "nav-link",
+        "nav-link active" if path.startswith("/trends") else "nav-link",
         "nav-link active" if path.startswith("/settings") else "nav-link"
     ]
