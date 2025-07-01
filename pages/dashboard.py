@@ -13,7 +13,7 @@ layout = html.Div([
     ], style={'position': 'relative'}),
 
 
-    html.H1("Turtle Control System", style={'text-align': 'center'}),
+    html.H1("Turtle SCADA", style={'text-align': 'center'}),
     
     
     html.Div([
@@ -25,7 +25,7 @@ layout = html.Div([
     
         # Control Buttons
     html.Div([
-        html.Button('Feed Turtle', id='feed-btn', n_clicks=0),
+        html.Button(id='feed-btn', n_clicks=0),
         
         html.Button('Turn Light ON', id='light-btn', n_clicks=0)
     ], style={'text-align': 'center', 'margin-top':'0px'}),
@@ -43,7 +43,6 @@ layout = html.Div([
         'backgroundColor': 'blue'  # neutral default (will get overwritten)
     }),
     
-    html.Div(id='feed-count-display'),
     html.Div(id="auto-status", style={"marginTop": "20px", "color": "#333"})
     ], style={'text-align': 'center'}),
 
@@ -122,16 +121,16 @@ def update_gauges(n):
         value=sensor_data["water_temperature"],
         title={'text': "Water Temp", 'font': {'size': 18, 'color': 'black'}},
         gauge={'axis': {'range': [45, 105], 'tickvals': list(range(0, 111, 10)), }, 'bar': {'color': "blue"}},
-        number={'suffix': "°F", 'font': {'size': 42}}  # Append °F after the value
+        number={'suffix': "°F", 'font': {'size': 41}}  # Append °F after the value
     ))
 
     basking_fig.update_layout(
-        margin={'l':78,'r':78,'t':42,'b':0},
+        margin={'l':79,'r':79,'t':42,'b':0},
         paper_bgcolor='#f5f5f5',   # light gray canvas
         plot_bgcolor='#f5f5f5'     # light gray plot area
     )
     water_fig.update_layout(
-        margin={'l':78,'r':78,'t':42,'b':0},
+        margin={'l':79,'r':79,'t':30,'b':0},
         paper_bgcolor='#f5f5f5',
         plot_bgcolor='#f5f5f5'
     )
@@ -159,12 +158,14 @@ def feed_turtle(n_clicks, auto_mode):
 @callback(
     [Output('feed-btn', 'children'),
      Output('feed-btn', 'style')],
-    Input('feeder-state-store', 'data')
+    [Input('feeder-state-store', 'data'),
+     Input('interval-update', 'n_intervals')]
 )
 
-def update_feed_button(state):
+def update_feed_button(state, _):
     is_running = state == "RUNNING"
-    label = "Feeding..." if is_running else "Feed Turtle"
+    count = sensor_data.get("feed_count", 0)
+    label = "Feeding..." if is_running else f"Feed #{count}"
     color = "green" if is_running else "gray"
 
     return label, {
@@ -258,14 +259,6 @@ def sync_auto_mode(n_clicks, _, current_mode):
         'color': 'white'
     }, label, new_mode
 
-# Store updates
-
-@callback(
-    Output('feed-count-display', 'children'),
-    Input('interval-update', 'n_intervals')
-)
-def update_feed_count_display(n):
-    return f"Feed: {sensor_data.get('feed_count', 0)}"
 
 @callback(
     Output('feeder-state-store', 'data'),
