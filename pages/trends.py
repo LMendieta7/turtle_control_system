@@ -65,15 +65,15 @@ def update_trends(n):
         fig.update_layout(
             xaxis=dict(
                 tickmode='array',
-                tickvals=list(range(0, 24)),   # Ticks at every 2 hours
-                ticktext=[f"{str(h).zfill(2)}:00" for h in range(0, 24)],
+                tickvals=list(range(0, 24,2)),   # Ticks at every 2 hours
+                ticktext=[f"{str(h).zfill(2)}:00" for h in range(0, 24,2)],
                 title="Hour of Day"
             ),
             yaxis=dict(
                 title="Temperature (°F)",
                 tickformat="d",    # Only show whole numbers
                 dtick=5,
-                range=[50, 110]            # Ticks every 2°F
+                range=[60, 110]            # Ticks every 2°F
             ),
             legend=dict(orientation="h", yanchor="bottom", y=1.08, xanchor="center", x=0.5),
             margin=dict(l=32, r=16, t=32, b=32),
