@@ -27,8 +27,8 @@ layout = html.Div([
     html.Div([
         html.Button(id='feed-btn', n_clicks=0),
         
-        html.Button('Turn Light ON', id='light-btn', n_clicks=0)
-    ], style={'text-align': 'center', 'margin-top':'0px'}),
+        html.Button(id='light-btn', n_clicks=0)
+    ], style={'text-align': 'center'}),
 
 
      # Auto Mode Toggle Button (new)
@@ -170,12 +170,7 @@ def update_feed_button(state, _):
 
     return label, {
         'backgroundColor': color,
-        'color': 'white',
-        'padding': '10px 15px',
-        'fontSize': '15px',
-        'border': 'none',
-        'borderRadius': '8px',
-        'width': '105px'
+        'color': 'white'       
     }
 
 
@@ -217,15 +212,8 @@ def update_light_button(current_status):
     color = "#FFD966" if is_on else "gray"
     label_color = "black" if is_on else "white"
     return label, {
-
-        'padding': '10px 15px',
         'backgroundColor': color,
-        'color': label_color,
-        'fontSize': '15px',
-        'border': 'none',
-        'borderRadius': '8px',
-        'width': '105px'
-        
+        'color': label_color,    
     }
 
 # Unified auto mode button
