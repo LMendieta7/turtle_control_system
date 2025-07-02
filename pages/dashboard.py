@@ -40,7 +40,7 @@ layout = html.Div([
         'border': 'none',
         'cursor': 'pointer',
         'color': 'white',
-        'backgroundColor': 'blue'  # neutral default (will get overwritten)
+        'backgroundColor': 'darkblue'  # neutral default (will get overwritten)
     }),
     
     html.Div(id="auto-status", style={"color": "#333"})
@@ -112,7 +112,7 @@ def update_gauges(n):
         mode="gauge+number",
         value=sensor_data["basking_temperature"],
         title={'text': "Basking Temp", 'font': {'size': 19,'color': 'black'}},
-        gauge={'axis': {'range': [45, 105], 'tickvals': list(range(0, 111, 10)),}, 'bar': {'color': "red"}},
+        gauge={'axis': {'range': [45, 105], 'tickvals': list(range(0, 111, 10)),}, 'bar': {'color': "darkred"}},
         number={'suffix': "°F",'font': {'size': 41}}  # Append °F after the value
     ))
     
@@ -120,7 +120,7 @@ def update_gauges(n):
         mode="gauge+number",
         value=sensor_data["water_temperature"],
         title={'text': "Water Temp", 'font': {'size': 19, 'color': 'black'}},
-        gauge={'axis': {'range': [45, 105], 'tickvals': list(range(0, 111, 10)), }, 'bar': {'color': "blue"}},
+        gauge={'axis': {'range': [45, 105], 'tickvals': list(range(0, 111, 10)), }, 'bar': {'color': "darkblue"}},
         number={'suffix': "°F", 'font': {'size': 41}}  # Append °F after the value
     ))
 
@@ -236,7 +236,7 @@ def sync_auto_mode(n_clicks, _, current_mode):
         new_mode = sensor_data.get("auto_mode", "off") == "on"
 
     label = "Auto On" if new_mode else "Auto Off"
-    color = "blue" if new_mode else "gray"
+    color = "darkblue" if new_mode else "gray"
     return {
         'border-radius': '50%',
         'padding': '17px 22px',

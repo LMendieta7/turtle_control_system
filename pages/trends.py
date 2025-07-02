@@ -9,7 +9,7 @@ from datetime import datetime
 dash.register_page(__name__, path="/trends", name="Temperatures")
 
 layout = html.Div([
-    html.H1("Hourly Temperature Trends", style={'textAlign': 'center', 'color': '#183A73', 'fontWeight': 'bold'}),
+    html.H1("Hourly Temperature", style={'textAlign': 'center', 'color': '#183A73', 'fontWeight': 'bold'}),
     dcc.Graph(id='trends-graph', config={'displayModeBar': False}, style={'margin': 'auto', 'maxWidth': '98vw'}),
     dcc.Interval(id='trends-interval', interval=60*1000, n_intervals=0)  # Update every minute
 ])
@@ -54,12 +54,12 @@ def update_trends(n):
         fig = go.Figure()
         fig.add_trace(go.Scatter(
             x=hourly["hour"], y=hourly["basking_temp"],
-            name="Basking Temp", mode="lines+markers", line=dict(width=4, color='red'),
+            name="Basking Temp", mode="lines+markers", line=dict(width=4, color='darkred'),
             hovertemplate='Hour: %{x}:00<br>Basking Temp: %{y:.0f}°F'
         ))
         fig.add_trace(go.Scatter(
             x=hourly["hour"], y=hourly["water_temp"],
-            name="Water Temp", mode="lines+markers", line=dict(width=4, color='blue'),
+            name="Water Temp", mode="lines+markers", line=dict(width=4, color='darkblue'),
             hovertemplate='Hour: %{x}:00<br>Water Temp: %{y:.0f}°F'
         ))
         fig.update_layout(

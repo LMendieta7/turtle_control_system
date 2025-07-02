@@ -16,14 +16,7 @@ sensor_data = {
 
 # Timestamps to track when each value was last updated
 sensor_timestamps = {
-    "basking_temperature": 0,
-    "water_temperature": 0,
-    "light_status": 0,
-    "feeder_state": 0,
-    "auto_mode": 0,
-    "feed_count": 0,
-    "esp_ip": 0,
-    "heap": 0,
+
     "mqtt_status": 0
 }
 
@@ -32,11 +25,7 @@ def reset_stale_sensor_data(timeout=10):
     now = time.time()
     for key, ts in sensor_timestamps.items():
         if now - ts > timeout:
-            if key in ["basking_temperature", "water_temperature", "feed_count"]:
-                sensor_data[key] = 0
-            elif key in ["esp_ip", "heap"]:
-                sensor_data[key] = "N/A"
-            else:
+            if key in ["mqtt_status"]:
                 sensor_data[key] = "disconnected"
 
 
