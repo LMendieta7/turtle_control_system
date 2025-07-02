@@ -36,14 +36,14 @@ layout = html.Div([
         html.Button("Auto On", id="auto-toggle-btn", n_clicks=0, style={
         'border-radius': '50%',
         'padding': '17px 22px',
-        'font-size': '14px',
+        'font-size': '15px',
         'border': 'none',
         'cursor': 'pointer',
         'color': 'white',
         'backgroundColor': 'blue'  # neutral default (will get overwritten)
     }),
     
-    html.Div(id="auto-status", style={"marginTop": "20px", "color": "#333"})
+    html.Div(id="auto-status", style={"color": "#333"})
     ], style={'text-align': 'center'}),
 
     # Store for auto mode status
@@ -113,7 +113,7 @@ def update_gauges(n):
         value=sensor_data["basking_temperature"],
         title={'text': "Basking Temp", 'font': {'size': 19,'color': 'black'}},
         gauge={'axis': {'range': [45, 105], 'tickvals': list(range(0, 111, 10)),}, 'bar': {'color': "red"}},
-        number={'suffix': "°F",'font': {'size': 42}}  # Append °F after the value
+        number={'suffix': "°F",'font': {'size': 41}}  # Append °F after the value
     ))
     
     water_fig = go.Figure(go.Indicator(
