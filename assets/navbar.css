@@ -3,7 +3,7 @@
     display: flex;
     align-items: center;
     background-color: #004080;
-    padding: 9px 18px;
+    padding: 9px 20px;
     color: white;
     position:relative;
 }
@@ -11,9 +11,9 @@
 /* LEFT LINKS */
 .nav-links {
     display: flex;
-    justify-content: center;
     flex: 1;
-    gap: 45px;
+    gap: 48px;
+
     
 }
 
@@ -21,7 +21,7 @@
     color: white;
     text-decoration: none;
     font-weight: bold;
-    font-size: 16px;
+    font-size: 17px;
     padding-bottom: 4px;
     border-bottom: 3px solid transparent;
     transition: border 0.3s ease;
@@ -40,5 +40,5 @@
 .user-icon {
     font-size: 24px;
     color: white;
-    margin-left: 50px;
+    margin-right: 2px;
 }

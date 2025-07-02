@@ -7,9 +7,8 @@ body{
 /* Ensure the H1 is centered and appropriately sized */
 h1 {
     font-size: 40px;
-    margin-top: 8px;
+    margin-top: 9px;
 }
-
 #gauge-container {
     width: 100%;
     margin: 0 auto;
@@ -30,7 +29,7 @@ h1 {
 
  
     h1 {
-        font-size: 30px;
+        font-size: 32px;
         color:#004080;
     }
 

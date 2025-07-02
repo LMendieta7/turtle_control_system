@@ -111,7 +111,7 @@ def update_gauges(n):
     basking_fig = go.Figure(go.Indicator(
         mode="gauge+number",
         value=sensor_data["basking_temperature"],
-        title={'text': "Basking Temp", 'font': {'size': 18,'color': 'black'}},
+        title={'text': "Basking Temp", 'font': {'size': 19,'color': 'black'}},
         gauge={'axis': {'range': [45, 105], 'tickvals': list(range(0, 111, 10)),}, 'bar': {'color': "red"}},
         number={'suffix': "°F",'font': {'size': 42}}  # Append °F after the value
     ))
@@ -119,7 +119,7 @@ def update_gauges(n):
     water_fig = go.Figure(go.Indicator(
         mode="gauge+number",
         value=sensor_data["water_temperature"],
-        title={'text': "Water Temp", 'font': {'size': 18, 'color': 'black'}},
+        title={'text': "Water Temp", 'font': {'size': 19, 'color': 'black'}},
         gauge={'axis': {'range': [45, 105], 'tickvals': list(range(0, 111, 10)), }, 'bar': {'color': "blue"}},
         number={'suffix': "°F", 'font': {'size': 41}}  # Append °F after the value
     ))
@@ -165,14 +165,14 @@ def feed_turtle(n_clicks, auto_mode):
 def update_feed_button(state, _):
     is_running = state == "RUNNING"
     count = sensor_data.get("feed_count", 0)
-    label = "Feeding..." if is_running else f"Feed #{count}"
+    label = "Feeding..." if is_running else f"Feed ({count})"
     color = "green" if is_running else "gray"
 
     return label, {
         'backgroundColor': color,
         'color': 'white',
         'padding': '10px 16px',
-        'fontSize': '14px',
+        'fontSize': '15px',
         'border': 'none',
         'borderRadius': '8px',
         'width': '105px'
@@ -221,7 +221,7 @@ def update_light_button(current_status):
         'padding': '10px 16px',
         'backgroundColor': color,
         'color': label_color,
-        'fontSize': '14px',
+        'fontSize': '15px',
         'border': 'none',
         'borderRadius': '8px',
         'width': '105px'
@@ -252,7 +252,7 @@ def sync_auto_mode(n_clicks, _, current_mode):
     return {
         'border-radius': '50%',
         'padding': '17px 22px',
-        'font-size': '14px',
+        'font-size': '15px',
         'border': 'none',
         'cursor': 'pointer',
         'backgroundColor': color,
