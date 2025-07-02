@@ -72,7 +72,7 @@ def update_trends(n):
             yaxis=dict(
                 title="Temperature (°F)",
                 tickformat="d",    # Only show whole numbers
-                dtick=10,
+                dtick=5,
                 range=[50, 110]            # Ticks every 2°F
             ),
             legend=dict(orientation="h", yanchor="bottom", y=1.08, xanchor="center", x=0.5),
