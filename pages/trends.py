@@ -1,9 +1,73 @@
 import dash
 from dash import html
+from dash import dcc, html, callback, Input, Output
+import plotly.graph_objects as go
+import pandas as pd
+import sqlite3
+from datetime import datetime
 
 dash.register_page(__name__, path="/trends", name="Temperatures")
 
 layout = html.Div([
-    html.H2("Temperature Logs"),
-    html.P("Graphs and temperature history will be shown here.")
+    html.H1("Hourly Temperature Trends", style={'textAlign': 'center', 'color': '#183A73', 'fontWeight': 'bold'}),
+    dcc.Graph(id='trends-graph', config={'displayModeBar': False}, style={'margin': 'auto', 'maxWidth': '98vw'}),
+    dcc.Interval(id='trends-interval', interval=60*1000, n_intervals=0)  # Update every minute
 ])
+
+
+# Graph update callback
+@callback(
+    Output('trends-graph', 'figure'),
+    Input('trends-interval', 'n_intervals')
+)
+def update_trends(n):
+    try:
+        conn = sqlite3.connect("turtle.db")
+        df = pd.read_sql_query(
+            "SELECT * FROM temperature_log WHERE DATE(timestamp) = DATE('now', 'localtime')",
+            conn
+        )
+        conn.close()
+
+        if df.empty:
+            fig = go.Figure()
+            fig.update_layout(
+                xaxis_title="Hour of Day",
+                yaxis_title="Temperature (°F)",
+                title="No data logged for today yet."
+            )
+            return fig
+
+        df['timestamp'] = pd.to_datetime(df['timestamp'])
+        df['hour'] = df['timestamp'].dt.hour
+        hourly = df.groupby('hour').mean(numeric_only=True).reset_index()
+
+        fig = go.Figure()
+        fig.add_trace(go.Scatter(
+            x=hourly["hour"], y=hourly["basking_temp"],
+            name="Basking Temp", mode="lines+markers", line=dict(width=4, color='red')
+        ))
+        fig.add_trace(go.Scatter(
+            x=hourly["hour"], y=hourly["water_temp"],
+            name="Water Temp", mode="lines+markers", line=dict(width=4, color='blue')
+        ))
+        fig.update_layout(
+            xaxis=dict(
+                tickmode='array',
+                tickvals=list(range(0, 24, 2)),
+                ticktext=[f"{str(h).zfill(2)}:00" for h in range(0, 24, 2)],
+                title="Hour of Day"
+            ),
+            yaxis=dict(title="Temperature (°F)"),
+            legend=dict(orientation="h", yanchor="bottom", y=1.08, xanchor="center", x=0.5),
+            margin=dict(l=32, r=16, t=32, b=32),
+        )
+        return fig
+    except Exception as e:
+        fig = go.Figure()
+        fig.update_layout(
+            title=f"Error loading data: {e}",
+            xaxis_title="Hour of Day",
+            yaxis_title="Temperature (°F)"
+        )
+        return fig
