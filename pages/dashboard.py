@@ -55,7 +55,9 @@ layout = html.Div([
     # Hidden store to remember light status
     dcc.Store(id='light-status-store', data='OFF'),
     dcc.Store(id='feeder-state-store', data='IDLE'),
-    dcc.Store(id='auto-mode-state-store', data='on')
+    dcc.Store(id='auto-mode-state-store', data='on'),
+    dcc.Store(id='esp-uptime-ms-store', data=0),
+
 
 ])
 
@@ -71,33 +73,46 @@ def update_status_display(n):
     esp_status = sensor_data.get("mqtt_status", "disconnected")
     esp_ip = sensor_data.get("esp_ip", "N/A")
     heap = sensor_data.get("heap", "N/A")
-
+    uptime_ms = sensor_data.get("esp_uptime_ms", 0)
+    
     esp_color = "green" if esp_status == "connected" else "gray"
+
+    def format_uptime(ms):
+        seconds = ms // 1000
+        days = seconds // 86400
+        hours = (seconds % 86400) // 3600
+        minutes = (seconds % 3600) // 60
+        return f"{days}d {hours}h {minutes}m"
     
     return html.Div([
+    html.Div([
+        html.Span("ESP STATUS: ", style={"fontWeight": "bold"}),
+        html.Span(style={
+            "display": "inline-block",
+            "width": "10px",
+            "height": "10px",
+            "borderRadius": "50%",
+            "backgroundColor": esp_color,
+            "marginLeft": "6px"
+        })
+    ], style={"marginBottom": "2px"}),
 
-        html.Div([
-            html.Span("ESP STATUS: ", style={"fontWeight": "bold"}),
-            html.Span(style={
-                "display": "inline-block",
-                "width": "10px",
-                "height": "10px",
-                "borderRadius": "50%",
-                "backgroundColor": esp_color,
-                "marginLeft": "6px"
-            })
-        ], style={"marginBottom": "2px"}),
+    html.Div([
+        html.Span("UPTIME: " , style={"fontWeight": "bold"}),
+        html.Span(format_uptime(uptime_ms))
+    ], style={"marginBottom": "2px"}),
 
-        html.Div([
-            html.Span("IP: ", style={"fontWeight": "bold"}),
-            html.Span(esp_ip)
-        ], style={"marginBottom": "2px"}),
+    html.Div([
+        html.Span("IP: ", style={"fontWeight": "bold"}),
+        html.Span(esp_ip)
+    ], style={"marginBottom": "2px"}),
 
-        html.Div([
-            html.Span("RAM: ", style={"fontWeight": "bold"}),
-            html.Span(heap)
-        ])
+    html.Div([
+        html.Span("RAM: ", style={"fontWeight": "bold"}),
+        html.Span(heap)
     ])
+])
+
 
 # Callbacks to update the temperature gauges
 @callback(
@@ -261,4 +276,5 @@ def update_feeder_state(n):
 )
 def update_auto_mode_state(n):
     return sensor_data.get("auto_mode", "off")
+
 

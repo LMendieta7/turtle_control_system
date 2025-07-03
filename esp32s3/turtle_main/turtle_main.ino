@@ -20,7 +20,7 @@
 
 // MQTT Broker Settings
 const char *mqttServer = "172.22.80.5"; // IP address of your MQTT broker (e.g., Mosquitto)
-const int mqttPort = 1883;             // Default MQTT port
+const int mqttPort = 1883;              // Default MQTT port
 
 unsigned long lastMQTTReconnectAttempt = 0;    // Track the last time we attempted to reconnect
 const unsigned long reconnectInterval = 15000; // Time between reconnect attempts (5 seconds)
@@ -34,7 +34,7 @@ const unsigned long TIMEOUT_MS = 13000; // Emergency stop after 12 seconds
 bool hasFedToday = false; // Flag to track feeding
 bool motorRunning = false;
 volatile bool hallTriggered = false; // Interrupt flag
-unsigned long motorStartTime = 0; // Track motor run time
+unsigned long motorStartTime = 0;    // Track motor run time
 
 // Set feeding time (change this to your desired time)
 int feedHour = 9;
@@ -138,8 +138,9 @@ void publishStatus()
   String heapStr = String(getFreeHeap() / 1024) + " KB";
   client.publish("turtle/heap", heapStr.c_str());
 
-  // Publish raw uptime in ms
-  client.publish("turtle/esp_uptime_ms", String(millis()).c_str());
+  // Publish  uptime in ms
+  uint64_t uptime_ms = esp_timer_get_time() / 1000; // convert microseconds to milliseconds
+  client.publish("turtle/esp_uptime_ms", String(uptime_ms).c_str());
 }
 
 void IRAM_ATTR hallSensorISR()
@@ -181,13 +182,14 @@ void stopMotor()
   feedCount++;
 
   preferences.begin("config", false);
-  if (preferences.getInt("feedCount", -1) != feedCount) {
+  if (preferences.getInt("feedCount", -1) != feedCount)
+  {
     preferences.putInt("feedCount", feedCount);
   }
   preferences.end();
-  
+
   client.publish("turtle/feed_count", String(feedCount).c_str(), true);
-  //const char *feederStatus = motorRunning ? "RUNNING" : "IDLE";
+  // const char *feederStatus = motorRunning ? "RUNNING" : "IDLE";
   client.publish("turtle/feeder_state", "IDLE");
 }
 
@@ -514,7 +516,6 @@ void reconnectMQTT()
       Serial.println("connected");
       subscribeToTopics();
       publishStatus();
-    
     }
     else
     {
@@ -557,9 +558,10 @@ void mqttCallback(char *topic, byte *payload, unsigned int length)
   // MQTT callback check for auto mode
   if (String(topic) == "turtle/auto_mode")
   {
-     bool newAutoMode = (message == "on");
+    bool newAutoMode = (message == "on");
 
-    if (newAutoMode != autoModeEnabled) {
+    if (newAutoMode != autoModeEnabled)
+    {
       autoModeEnabled = newAutoMode;
 
       // Save to Preferences
@@ -567,11 +569,11 @@ void mqttCallback(char *topic, byte *payload, unsigned int length)
       preferences.putBool("autoMode", autoModeEnabled);
       preferences.end();
 
-      //Serial.println("Auto mode updated and saved.");
-  }
+      // Serial.println("Auto mode updated and saved.");
+    }
 
-  // Always publish updated state (retained)
-  client.publish("turtle/auto_mode_state", autoModeEnabled ? "on" : "off", true);
+    // Always publish updated state (retained)
+    client.publish("turtle/auto_mode_state", autoModeEnabled ? "on" : "off", true);
   }
 
   if (String(topic) == "turtle/lights")
@@ -628,7 +630,7 @@ void setup()
   preferences.end();
 
   preferences.begin("config", false);
-  feedCount = preferences.getInt("feedCount", 0);  // ← Updates global variable
+  feedCount = preferences.getInt("feedCount", 0); // ← Updates global variable
   autoModeEnabled = preferences.getBool("autoMode", true);
   preferences.end();
 
