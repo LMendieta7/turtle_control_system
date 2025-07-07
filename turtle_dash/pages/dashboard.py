@@ -13,7 +13,7 @@ layout = html.Div([
     ], style={'position': 'relative'}),
 
 
-    html.H1("Turtle Dashboard", style={'text-align': 'center'}),
+    html.H1("Turtle SCADA", style={'text-align': 'center'}),
     
     
     html.Div([
