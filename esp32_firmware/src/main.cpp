@@ -1,4 +1,5 @@
 #include <Arduino.h>
+#include <ArduinoOTA.h>
 #include <Preferences.h>
 #include <Wire.h>
 #include <Adafruit_GFX.h>
@@ -672,12 +673,14 @@ void setup()
   display.print(getFreeHeap() / 1024.0);
   display.println(" KB");
   display.display();
+  ArduinoOTA.begin();
   delay(3000);
   // client.publish("turtle/auto_mode_state", autoModeEnabled ? "on" : "off");
 }
 
 void loop()
 {
+  ArduinoOTA.handle();
   checkWiFi();
   handleHallSensorTrigger();
   bool wifiConnected = WiFi.status() == WL_CONNECTED;
