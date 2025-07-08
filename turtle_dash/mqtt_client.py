@@ -19,7 +19,9 @@ sensor_data = {
 sensor_timestamps = {
 
     "mqtt_status": 0,
-    "esp_uptime_ms": 0
+    "esp_uptime_ms": 0,
+    "basking_temperature": 0,
+    "water_temperature": 0,
 }
 
 # Reset sensor values if stale
@@ -31,6 +33,10 @@ def reset_stale_sensor_data(timeout=10):
                 sensor_data["mqtt_status"] = "disconnected"
             elif key == "esp_uptime_ms":
                 sensor_data["esp_uptime_ms"] = 0
+            elif key == "basking_temperature":
+                sensor_data["basking_temperature"] = 0
+            elif key == "water_temperature":
+                sensor_data["water_temperature"] = 0
 
 # MQTT callback functions
 def on_connect(client, userdata, flags, rc, properties):
@@ -56,10 +62,10 @@ def on_message(client, userdata, msg):
 
         if topic == "turtle/basking_temperature":
             sensor_data["basking_temperature"] = float(payload)
-            #sensor_timestamps["basking_temperature"] = now
+            sensor_timestamps["basking_temperature"] = now
         elif topic == "turtle/water_temperature":
             sensor_data["water_temperature"] = float(payload)
-            #sensor_timestamps["water_temperature"] = now
+            sensor_timestamps["water_temperature"] = now
         elif topic == "turtle/lights_state":
             sensor_data["light_status"] = payload
             #sensor_timestamps["light_status"] = now
