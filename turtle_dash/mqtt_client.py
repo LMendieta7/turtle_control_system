@@ -1,106 +1,99 @@
-import paho.mqtt.client as mqtt
+# mqtt_client.py
+
 import time
+import threading
+import paho.mqtt.client as mqtt
+from models.sensor import Sensor
+from models.status_manager import StatusManager
 
-# Global variables for sensor data
-sensor_data = {
-    "basking_temperature": 0,
-    "water_temperature": 0, 
-    "light_status": "OFF", 
-    "feeder_state": "IDLE", 
-    "auto_mode": "on",
-    "feed_count": 0,
-    "esp_ip": "N/A",
-    "heap": "N/A",
-    "mqtt_status": "disconnected",
-    "esp_uptime_ms": 0
-}
+# ————————————————————————————————
+# 1) Your sensors and status manager
+basking_sensor = Sensor("Basking", default=0, valid_range=(40, 130))
+water_sensor  = Sensor("Water",  default=0, valid_range=(40, 130))
 
-# Timestamps to track when each value was last updated
-sensor_timestamps = {
+# default_timeout=None: only stale-fallback when YOU ask for it in Dash
+status = StatusManager(default_timeout=None)
 
-    "mqtt_status": 0,
-    "esp_uptime_ms": 0,
-    "basking_temperature": 0,
-    "water_temperature": 0,
-}
+# ————————————————————————————————
+# 2) MQTT callbacks
 
-# Reset sensor values if stale
-def reset_stale_sensor_data(timeout=10):
-    now = time.time()
-    for key, ts in sensor_timestamps.items():
-        if now - ts > timeout:
-            if key == "mqtt_status":
-                sensor_data["mqtt_status"] = "disconnected"
-            elif key == "esp_uptime_ms":
-                sensor_data["esp_uptime_ms"] = 0
-            elif key == "basking_temperature":
-                sensor_data["basking_temperature"] = 0
-            elif key == "water_temperature":
-                sensor_data["water_temperature"] = 0
-
-# MQTT callback functions
-def on_connect(client, userdata, flags, rc, properties):
-    print(f"Connected with result code {rc}")
-    client.subscribe("turtle/basking_temperature")  # Subscribe to basking temp
-    client.subscribe("turtle/water_temperature")    # Subscribe to water temp
-    client.subscribe("turtle/lights_state")  
-    client.subscribe("turtle/feeder_state")
-    client.subscribe("turtle/auto_mode_state")
-    client.subscribe("turtle/feed_count")
-    client.subscribe("turtle/mqtt_status")
-    client.subscribe("turtle/heap")
-    client.subscribe("turtle/esp_ip")
-    client.subscribe("turtle/esp_uptime_ms")
-
+def on_connect(client, userdata, flags, rc, properties=None):
+    print(f"[MQTT] Connected (rc={rc})")
+    status.update_status("mqtt_status", "connected")
+    for topic in (
+        "turtle/basking_temperature",
+        "turtle/water_temperature",
+        "turtle/lights_state",
+        "turtle/feeder_state",
+        "turtle/auto_mode_state",
+        "turtle/feed_count",
+        "turtle/heap",
+        "turtle/esp_ip",
+        "turtle/esp_uptime_ms",
+    ):
+        client.subscribe(topic)
 
 def on_message(client, userdata, msg):
-    global sensor_data, sensor_timestamps
     try:
-        topic = msg.topic
-        payload = msg.payload.decode()
-        now = time.time()
+        # every message is a heartbeat
+        status.update_status("mqtt_status", "connected")
+
+        topic, payload = msg.topic, msg.payload.decode()
 
         if topic == "turtle/basking_temperature":
-            sensor_data["basking_temperature"] = float(payload)
-            sensor_timestamps["basking_temperature"] = now
-        elif topic == "turtle/water_temperature":
-            sensor_data["water_temperature"] = float(payload)
-            sensor_timestamps["water_temperature"] = now
-        elif topic == "turtle/lights_state":
-            sensor_data["light_status"] = payload
-            #sensor_timestamps["light_status"] = now
-        elif topic == "turtle/feeder_state":
-            sensor_data["feeder_state"] = payload
-            #sensor_timestamps["feeder_state"] = now
-        elif topic == "turtle/auto_mode_state":
-            sensor_data["auto_mode"] = payload
-            #sensor_timestamps["auto_mode"] = now
-        elif topic == "turtle/feed_count":
-            sensor_data["feed_count"] = int(payload)
-           # sensor_timestamps["feed_count"] = now
-        elif topic == "turtle/esp_ip":
-            sensor_data["esp_ip"] = payload
-            #sensor_timestamps["esp_ip"] = now
-        elif topic == "turtle/heap":
-            sensor_data["heap"] = payload
-            #sensor_timestamps["heap"] = now
-        elif topic == "turtle/mqtt_status":
-            sensor_data["mqtt_status"] = payload
-            sensor_timestamps["mqtt_status"] = now
-        elif topic == "turtle/esp_uptime_ms":
-            sensor_data["esp_uptime_ms"] = int(payload)
-            sensor_timestamps["esp_uptime_ms"] = now
+            basking_sensor.update(float(payload))
+            return
+        if topic == "turtle/water_temperature":
+            water_sensor.update(float(payload))
+            return
 
+        mapping = {
+            "turtle/lights_state":    "light_status",
+            "turtle/feeder_state":    "feeder_state",
+            "turtle/auto_mode_state": "auto_mode",
+            "turtle/feed_count":      "feed_count",
+            "turtle/esp_ip":          "esp_ip",
+            "turtle/heap":            "heap",
+            "turtle/esp_uptime_ms":   "esp_uptime_ms",
+        }
+        key = mapping.get(topic)
+        if key:
+            val = int(payload) if key in ("feed_count","esp_uptime_ms") else payload
+            status.update_status(key, val)
 
-    except ValueError:
-        print(f"Invalid value received on {msg.topic}")
+    except Exception as e:
+        # Log and swallow any errors so the thread never dies
+        print(f"[MQTT:on_message] Error parsing {msg.topic}: {e}")
 
-# MQTT Client setup
+def on_disconnect(client, userdata, *args):
+    """
+    Called whenever the MQTT client loses its connection.
+    We don’t care what extra parameters Paho passes—just mark us disconnected.
+    """
+    status.update_status("mqtt_status", "disconnected")
+    print("[MQTT] Disconnected")
+
+# ————————————————————————————————
+# 3) Create and configure the client
+
 mqtt_client = mqtt.Client(callback_api_version=mqtt.CallbackAPIVersion.VERSION2)
+mqtt_client.on_connect    = on_connect
+mqtt_client.on_message    = on_message
+mqtt_client.on_disconnect = on_disconnect
 
-mqtt_client.on_connect = on_connect
-mqtt_client.on_message = on_message
+# Tell Paho to auto-reconnect with backoff (1s → 120s)
+mqtt_client.reconnect_delay_set(min_delay=1, max_delay=120)
 
-# Connect to MQTT broker
-mqtt_client.connect("172.22.80.5", 1883, 60)
-mqtt_client.loop_start()
+def _start_mqtt():
+    while True:
+        try:
+            # use connect_async to avoid blocking the import if the broker is down
+            mqtt_client.connect_async("172.22.80.5", 1883, 60)
+            mqtt_client.loop_start()
+            break
+        except Exception as e:
+            print(f"[MQTT] Initial connect failed: {e} — retrying in 5s")
+            time.sleep(5)
+
+# Kick off the background thread so your app can continue loading
+threading.Thread(target=_start_mqtt, daemon=True).start()
