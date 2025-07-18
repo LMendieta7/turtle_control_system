@@ -4,6 +4,7 @@
 #include <Wire.h>
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
+#include <Adafruit_ADS1X15.h>
 #include <OneWire.h>
 #include <DallasTemperature.h>
 #include <RTClib.h>
@@ -14,11 +15,31 @@
 #include "esp_system.h"
 #include <PubSubClient.h>
 
+// ADS1115
+Adafruit_ADS1115 ads;
+
 #define AIN1 16        // Motor direction pin
 #define AIN2 18        // Motor direction pin
 #define PWMA 15        // Motor speed (PWM)
 #define STBY 21        // Standby (enable motor)
 #define HALL_SENSOR 12 // Hall effect sensor pin
+// ─── USER CONFIG ────────────────────────────────────────────────
+// Burden resistor you trimmed on each CT (Ω)
+#define BURDEN 0.5f
+
+// ADS1115 in ±0.512 V mode → 0.512 V/32768 ≈ 15.6 µV/count
+#define ADS_GAIN GAIN_EIGHT
+const float ADS_LSB = 0.512f / 32768.0f;
+
+// Thresholds for “lamp ON” (amps)
+#define TH_HEAT 0.20f // roughly half your 50 W lamp’s ≈0.43 A
+#define TH_UV 0.05f   // roughly half your 13 W lamp’s ≈0.11 A
+
+// How many samples to auto-zero / measure
+#define CAL_SAMPLES 100
+#define READ_SAMPLES 50
+// ────────────────────────────────────────────────────────────────
+float offsetHeat, offsetUV;
 
 // MQTT Broker Settings
 const char *mqttServer = "172.22.80.5"; // IP address of your MQTT broker (e.g., Mosquitto)
@@ -112,10 +133,12 @@ unsigned long lastStatusPublish = 0;
 const unsigned long statusPublishInterval = 8000;
 
 volatile unsigned long lastHallTriggerTime = 0;
-const unsigned long debounceDelay = 300; // ms
+const unsigned long debounceDelay = 100; // ms
 
+// prototype
 void syncTimeFromNTP();
 uint32_t getFreeHeap();
+float readCurrent(uint8_t pair, float offset);
 
 void publishStatus()
 {
@@ -128,13 +151,13 @@ void publishStatus()
   client.publish("turtle/feeder_state", feederStatus);
 
   // Auto mode status
-  client.publish("turtle/auto_mode_state", autoModeEnabled ? "on" : "off");
+  client.publish("turtle/auto_mode_state", autoModeEnabled ? "on" : "off", true);
 
-  client.publish("turtle/feed_count", String(feedCount).c_str());
+  client.publish("turtle/feed_count", String(feedCount).c_str(), true);
 
   // publish current IP
   String ip = WiFi.localIP().toString();
-  client.publish("turtle/esp_ip", ip.c_str());
+  client.publish("turtle/esp_ip", ip.c_str(), true);
 
   // mqtt status
   const char *mqttStatus = client.connected() ? "connected" : "disconnected";
@@ -145,7 +168,21 @@ void publishStatus()
 
   // Publish  uptime in ms
   uint64_t uptime_ms = esp_timer_get_time() / 1000; // convert microseconds to milliseconds
-  client.publish("turtle/esp_uptime_ms", String(uptime_ms).c_str());
+  client.publish("turtle/esp_uptime_ms", String(uptime_ms).c_str(), true);
+
+  // publish uv & heat bulb current to determine  bulbs OK or FAULT
+  float heatA = readCurrent(0, offsetHeat);
+  client.publish("turtle/heat_bulb/current", String(heatA, 3).c_str());
+
+  float uvA = readCurrent(1, offsetUV);
+  client.publish("turtle/uv_bulb/current", String(uvA, 3).c_str());
+
+  // Decide ok/fault
+  bool heatOk = heatA > TH_HEAT;
+  bool uvOk = uvA > TH_UV;
+
+  client.publish("turtle/heat_bulb/status", heatOk ? "OK" : "FAULT");
+  client.publish("turtle/UV_bulb/status", uvOk ? "OK" : "FAULT");
 }
 
 void IRAM_ATTR hallSensorISR()
@@ -601,10 +638,42 @@ void mqttCallback(char *topic, byte *payload, unsigned int length)
   }
 }
 
+float readCurrent(uint8_t pair, float offset)
+{
+  long sumDev = 0;
+  for (int i = 0; i < READ_SAMPLES; i++)
+  {
+    int16_t raw = (pair == 0)
+                      ? ads.readADC_Differential_0_1()
+                      : ads.readADC_Differential_2_3();
+    sumDev += abs(raw - offset);
+    delayMicroseconds(500);
+  }
+  float avgCounts = sumDev / float(READ_SAMPLES);
+  float volts = avgCounts * ADS_LSB; // V across burden
+  return volts / BURDEN;             // I = V / R
+}
+
 void setup()
 {
   // Start Serial Monitor
-  Serial.begin(9600);
+  // Serial.begin(9600);
+  Wire.begin();
+  ads.begin();
+  ads.setGain(ADS_GAIN);
+
+  // 1) Auto-zero with both lamps OFF
+  long sumH = 0, sumU = 0;
+  for (int i = 0; i < CAL_SAMPLES; i++)
+  {
+    sumH += ads.readADC_Differential_0_1(); // Heat CT on AIN0–AIN1
+    sumU += ads.readADC_Differential_2_3(); //  UV CT on AIN2–AIN3
+    delay(5);
+  }
+  offsetHeat = sumH / float(CAL_SAMPLES);
+  offsetUV = sumU / float(CAL_SAMPLES);
+
+  delay(500);
   esp_sleep_disable_wakeup_source(ESP_SLEEP_WAKEUP_ALL);
 
   // Initialize GPIO Pins
@@ -728,3 +797,12 @@ void loop()
     publishStatus(); // Periodic status update
   }
 }
+
+// // 5) OLED display
+// display.clearDisplay();
+// display.setTextSize(1);
+// display.setCursor(0, 0);
+// display.printf("H bulb: %.3fA %s", heatA, heatOn ? "OK" : "FL");
+// display.setCursor(0, 20);
+// display.printf("UV bulb: %.3fA %s", uvA, uvOn ? "OK" : "FL");
+// display.display();
