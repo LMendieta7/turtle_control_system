@@ -184,7 +184,7 @@ def update_gauges(n):
         fig.update_layout(
             paper_bgcolor='#f5f5f5',
             plot_bgcolor='#f5f5f5',
-            margin={'l':20,'r':20,'t':5,'b':0},
+            margin={'l':30,'r':30,'t':4,'b':0},
         )
 
     return fig1, fig2
