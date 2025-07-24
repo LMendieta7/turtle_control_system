@@ -1,6 +1,7 @@
 import dash
 from dash import dcc, html, Input, Output, State, callback_context, no_update
 import plotly.graph_objects as go
+import time
 
 from mqtt_client import mqtt_client, status, basking_sensor, water_sensor
 
@@ -17,11 +18,11 @@ def layout():
 
     return html.Div([
 
-        # ─── STATUS BAR ────────────────────────────────────────────────
-        html.Div(id="status-container"),
-
-        # ─── PAGE TITLE ────────────────────────────────────────────────
+       # ─── PAGE TITLE ────────────────────────────────────────────────
         html.H1("Turtle SCADA", className="page-title"),
+
+         # ─── STATUS BAR ────────────────────────────────────────────────
+        html.Div(id="status-container"),
 
         # ─── GAUGES ────────────────────────────────────────────────────
         html.Div([
@@ -56,9 +57,19 @@ def layout():
         dcc.Store(id="auto-mode-store",    data=auto_on),
         dcc.Store(id="light-status-store", data="OFF"),
         dcc.Store(id="feeder-state-store", data="IDLE"),
-        dcc.Interval(id="interval-update", interval=2000, n_intervals=0),
+        dcc.Store(id="auto-mode-cooldown-until", data=0),
+        dcc.Interval(id="interval-update", interval=1000, n_intervals=0),
 
     ])
+
+@dash.callback(
+    Output("auto-mode-cooldown-until", "data"),
+    Input("auto-toggle-btn", "n_clicks"),
+    State("auto-mode-cooldown-until", "data"),
+    prevent_initial_call=True
+)
+def start_auto_mode_cooldown(n_clicks, prev_until):
+    return time.time() + 1.5
 
 # ─── STATUS BAR ────────────────────────────────────────────────────────
 @dash.callback(
@@ -66,12 +77,14 @@ def layout():
     Input("interval-update", "n_intervals"),
 )
 def update_status_display(n):
+
+    esp_mqtt = status.get_status("esp_mqtt", default="disconnected", timeout=15, fallback_on_stale=True)
     mqtt_s   = status.get_status("mqtt_status", default="disconnected")
     mqtt_col = "green" if mqtt_s=="connected" else "gray"
 
     esp_o    = status.get_status("esp_online", default=False)
     esp_col  = (
-        "green" if esp_o and mqtt_s=="connected" else
+        "green" if esp_o and esp_mqtt=="connected" else
         "red"   if esp_o else
         "gray"
     )
@@ -79,6 +92,10 @@ def update_status_display(n):
     ip   = status.get_status("esp_ip",        default="N/A")
     ram  = status.get_status("heap",          default="N/A")
     upms = status.get_status("esp_uptime_ms", default=0)
+    heat_current = status.get_status("heat_bulb_current", default=0.0)
+    uv_current   = status.get_status("uv_bulb_current",   default=0.0)
+    heat_status  = status.get_status("heat_bulb_status",  default="OFF")
+    uv_status    = status.get_status("uv_bulb_status",    default="OFF")
 
     def fmt(ms):
         s = ms // 1000
@@ -86,26 +103,54 @@ def update_status_display(n):
 
     return html.Div([
         html.Div([
-            html.Span("ESP STATUS:", className="status-label"),
+            html.Span("ESP32:", title="ESP32-S3 status/mqtt ", className="status-label"),
             html.Span(className=f"status-dot {esp_col}")
         ], className="status-item"),
         html.Div([
-            html.Span("MQTT SERVER:", className="status-label"),
+            html.Span("MQTT(B):", title="DASH MQTT broker connection status", className="status-label" ),
             html.Span(className=f"status-dot {mqtt_col}")
         ], className="status-item"),
+
         html.Div([
-            html.Span("UPTIME:", className="status-label"),
-            html.Span(fmt(upms), className="status-value")
-        ], className="status-item"),
-        html.Div([
-            html.Span("ESP IP:", className="status-label"),
+            html.Span("IP:", title="ESP32-S3 IP ADDRESS", className="status-label"),
             html.Span(ip, className="status-value")
         ], className="status-item"),
+
         html.Div([
-            html.Span("RAM:", className="status-label"),
+            html.Span("UP:", title="ESP32-S3 uptime since boot", className="status-label"),
+            html.Span(fmt(upms), className="status-value")
+        ], className="status-item"),
+
+        html.Div([
+            html.Span("RAM:", title="ESP32-S3 free RAM available", className="status-label"),
             html.Span(ram, className="status-value")
         ], className="status-item"),
-    ])
+        
+        html.Div([
+            html.Span("HT B:", title="Heat bulb status and current reading in amps", className="status-label"),
+            html.Span(f"{heat_status} ({heat_current:.2f} A)", className="status-value", style={
+                "color": (
+                "green" if heat_status == "OK"
+                else "red" if heat_status == "FLT"
+                else "black"  # for "OFF" or anything else
+            )
+            })
+
+        ], className="status-item"),
+        html.Div([
+            html.Span("UV B:", title="UV bulb status and current reading in amps", className="status-label"),
+            html.Span(f"{uv_status} ({uv_current:.2f} A)", className="status-value", style={
+                "color": (
+                "green" if uv_status == "OK"
+                else "red" if uv_status == "FLT"
+                else "black"  # for "OFF" or anything else
+            )
+            
+            })
+        ], className="status-item"),
+       
+
+    ], className="status-bar")
 
 # ─── GAUGES ────────────────────────────────────────────────────────────
 @dash.callback(
@@ -126,20 +171,20 @@ def update_gauges(n):
         mode="gauge+number", value=bval,
         title={'text': "Basking Temp", 'font': {'size': 19,'color': 'black'}},
         gauge={'axis': {'range': [45, 105], 'tickvals': list(range(0, 111, 10)),}, 'bar': {'color': bb}},
-        number={'suffix': "°F", 'font': {'size': 38,'color': bt}}
+        number={'suffix': "°F", 'font': {'size': 36,'color': bt}}
     ))
     fig2 = go.Figure(go.Indicator(
         mode="gauge+number", value=wval,
         title={'text': "Water Temp", 'font': {'size': 19, 'color': 'black'}},
         gauge={'axis': {'range': [45, 105], 'tickvals': list(range(0, 111, 10)), }, 'bar': {'color': wb}},
-        number={'suffix': "°F", 'font': {'size': 38,'color': wt}}
+        number={'suffix': "°F", 'font': {'size': 36,'color': wt}}
     ))
 
     for fig in (fig1, fig2):
         fig.update_layout(
             paper_bgcolor='#f5f5f5',
             plot_bgcolor='#f5f5f5',
-            margin={'l':79,'r':79,'t':8,'b':0},
+            margin={'l':20,'r':20,'t':5,'b':0},
         )
 
     return fig1, fig2
@@ -205,23 +250,27 @@ def on_light_click(n, auto_on, cur):
 
 # ─── AUTO MODE STORE UPDATE ───────────────────────────────────────────
 @dash.callback(
-    Output("auto-mode-store","data"),
-    [Input("auto-toggle-btn","n_clicks"),
-     Input("interval-update",   "n_intervals")],
-    State("auto-mode-store","data")
+    Output("auto-mode-store", "data"),
+    [Input("auto-toggle-btn", "n_clicks"),
+     Input("interval-update", "n_intervals")],
+    [State("auto-mode-store", "data"),
+     State("auto-mode-cooldown-until", "data")]
 )
-def update_auto_store(n_clicks, n_intervals, current):
+def update_auto_store(n_clicks, n_intervals, current, cooldown_until):
+    now = time.time()
     triggered = callback_context.triggered[0]["prop_id"].split(".")[0]
-    # Optimistic click → immediate
     if triggered == "auto-toggle-btn":
         new = not current
         mqtt_client.publish("turtle/auto_mode", "on" if new else "off")
         return new
-    # Poll → only overwrite when actual state truly changed
+    # Only sync to broker if cooldown has expired
+    if now < cooldown_until:
+        return no_update
     actual = status.get_status("auto_mode", default="off") == "on"
     if actual != current:
         return actual
     return no_update
+
 
 # ─── AUTO MODE RENDER ─────────────────────────────────────────────────
 @dash.callback(

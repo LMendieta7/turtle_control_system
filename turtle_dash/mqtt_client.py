@@ -30,6 +30,12 @@ def on_connect(client, userdata, flags, rc, properties=None):
         "turtle/heap",
         "turtle/esp_ip",
         "turtle/esp_uptime_ms",
+        "turtle/esp_mqtt",
+        "turtle/heat_bulb/current",
+        "turtle/uv_bulb/current",
+        "turtle/heat_bulb/status",
+        "turtle/uv_bulb/status"
+
     ):
         client.subscribe(topic)
 
@@ -55,10 +61,20 @@ def on_message(client, userdata, msg):
             "turtle/esp_ip":          "esp_ip",
             "turtle/heap":            "heap",
             "turtle/esp_uptime_ms":   "esp_uptime_ms",
+            "turtle/esp_mqtt":          "esp_mqtt",
+            "turtle/heat_bulb/current":   "heat_bulb_current",
+            "turtle/uv_bulb/current":     "uv_bulb_current",
+            "turtle/heat_bulb/status":    "heat_bulb_status",
+            "turtle/uv_bulb/status":      "uv_bulb_status"
         }
         key = mapping.get(topic)
         if key:
-            val = int(payload) if key in ("feed_count","esp_uptime_ms") else payload
+            if key in ("feed_count", "esp_uptime_ms"):
+                val = int(payload)
+            elif key in ("heat_bulb_current", "uv_bulb_current"):
+                val = float(payload)
+            else:
+                val = payload
             status.update_status(key, val)
 
     except Exception as e:
