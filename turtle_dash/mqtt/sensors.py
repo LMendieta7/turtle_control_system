@@ -53,3 +53,8 @@ class Sensor:
 
     def __repr__(self):
         return f"<Sensor {self.name}: {self.value} (updated {int(self.last_updated)})>"
+
+
+# Sensor instances
+basking_sensor = Sensor("Basking", default=0, valid_range=(40, 130))
+water_sensor   = Sensor("Water",   default=0, valid_range=(40, 130))

@@ -4,15 +4,13 @@ import time
 import threading
 import paho.mqtt.client as mqtt
 from mqtt.sensors import Sensor
-from mqtt.status_manager import StatusManager
+from mqtt.status_manager import status, StatusManager
+from mqtt.topics import TOPICS
 
 # ————————————————————————————————
 # 1) Your sensors and status manager
 basking_sensor = Sensor("Basking", default=0, valid_range=(40, 130))
 water_sensor  = Sensor("Water",  default=0, valid_range=(40, 130))
-
-# default_timeout=None: only stale-fallback when YOU ask for it in Dash
-status = StatusManager(default_timeout=None)
 
 # ————————————————————————————————
 # 2) MQTT callbacks
@@ -20,23 +18,7 @@ status = StatusManager(default_timeout=None)
 def on_connect(client, userdata, flags, rc, properties=None):
     print(f"[MQTT] Connected (rc={rc})")
     status.update_status("mqtt_status", "connected")
-    for topic in (
-        "turtle/basking_temperature",
-        "turtle/water_temperature",
-        "turtle/lights_state",
-        "turtle/feeder_state",
-        "turtle/auto_mode_state",
-        "turtle/feed_count",
-        "turtle/heap",
-        "turtle/esp_ip",
-        "turtle/esp_uptime_ms",
-        "turtle/esp_mqtt",
-        "turtle/heat_bulb/current",
-        "turtle/uv_bulb/current",
-        "turtle/heat_bulb/status",
-        "turtle/uv_bulb/status"
-
-    ):
+    for topic in TOPICS:
         client.subscribe(topic)
 
 def on_message(client, userdata, msg):
@@ -100,16 +82,16 @@ mqtt_client.on_disconnect = on_disconnect
 # Tell Paho to auto-reconnect with backoff (1s → 120s)
 mqtt_client.reconnect_delay_set(min_delay=1, max_delay=120)
 
-def _start_mqtt():
-    while True:
-        try:
-            # use connect_async to avoid blocking the import if the broker is down
-            mqtt_client.connect_async("172.22.80.5", 1883, 60)
-            mqtt_client.loop_start()
-            break
-        except Exception as e:
-            print(f"[MQTT] Initial connect failed: {e} — retrying in 5s")
-            time.sleep(5)
+def start_mqtt():
+    def _connect():
+        while True:
+            try:
+                mqtt_client.connect_async("172.22.80.5", 1883, 60)
+                mqtt_client.loop_start()
+                break
+            except Exception as e:
+                print(f"[MQTT] Initial connect failed: {e} — retrying in 5s")
+                time.sleep(5)
 
-# Kick off the background thread so your app can continue loading
-threading.Thread(target=_start_mqtt, daemon=True).start()
+    threading.Thread(target=_connect, daemon=True).start()
+

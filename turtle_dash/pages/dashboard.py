@@ -3,7 +3,7 @@ from dash import dcc, html, Input, Output, State, callback_context, no_update
 import plotly.graph_objects as go
 import time
 
-from mqtt_client import mqtt_client, status, basking_sensor, water_sensor
+from mqtt.client import mqtt_client, status, basking_sensor, water_sensor
 
 dash.register_page(__name__, path="/", name="Dashboard")
 
@@ -96,6 +96,14 @@ def update_status_display(n):
     uv_current   = status.get_status("uv_bulb_current",   default=0.0)
     heat_status  = status.get_status("heat_bulb_status",  default="OFF")
     uv_status    = status.get_status("uv_bulb_status",    default="OFF")
+    
+    def bulb_stat_color(status):
+        if status == "OK":
+            return "green"
+        elif status == "FLT":
+            return "red"
+        else :
+            return "gray"
 
     def fmt(ms):
         s = ms // 1000
@@ -128,25 +136,14 @@ def update_status_display(n):
         
         html.Div([
             html.Span("HT B:", title="Heat bulb status and current reading in amps", className="status-label"),
-            html.Span(f"{heat_status} ({heat_current:.2f} A)", className="status-value", style={
-                "color": (
-                "green" if heat_status == "OK"
-                else "red" if heat_status == "FLT"
-                else "black"  # for "OFF" or anything else
-            )
-            })
+            html.Span(className=f"status-dot {bulb_stat_color(heat_status)}"),
+            html.Span(f" ({heat_current:.2f} A)", className="status-value")
 
         ], className="status-item"),
         html.Div([
             html.Span("UV B:", title="UV bulb status and current reading in amps", className="status-label"),
-            html.Span(f"{uv_status} ({uv_current:.2f} A)", className="status-value", style={
-                "color": (
-                "green" if uv_status == "OK"
-                else "red" if uv_status == "FLT"
-                else "black"  # for "OFF" or anything else
-            )
-            
-            })
+            html.Span(className=f"status-dot {bulb_stat_color(uv_status)}"),
+            html.Span(f" ({uv_current:.2f} A)", className="status-value")
         ], className="status-item"),
        
 

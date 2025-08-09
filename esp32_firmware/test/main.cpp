@@ -4,17 +4,18 @@
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
 #include <Adafruit_ADS1X15.h>
+#include <OneWire.h>
+#include <DallasTemperature.h>
+#include <RTClib.h>
 #include <Fonts/FreeSans9pt7b.h> // Include a font for OLED display
 #include "esp_system.h"
+#include <PubSubClient.h>
 #include "wifi_manager.h"
 #include "mqtt_manager.h"
 #include "auto_mode_manager.h"
 #include "feeder_manager.h"
 #include "rtc_manager.h"
-#include "light_manager.h"
-#include "temp_sensor_manager.h"
-
-TempSensorManager tempSensors;
+#include "light_manager.h" 
 
 AutoModeManager autoMode;
 RtcManager rtc;
@@ -50,6 +51,24 @@ float offsetHeat, offsetUV;
 
 // Initialize OLED display
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1);
+
+// Initialize DS18B20 sensors
+#define ONE_WIRE_BUS_1 4 // First DS18B20 basking temperature on GPIO4
+#define ONE_WIRE_BUS_2 5 // Second DS18B20 water temperature on GPIO5
+
+OneWire oneWire1(ONE_WIRE_BUS_1);
+OneWire oneWire2(ONE_WIRE_BUS_2);
+
+DallasTemperature sensor1(&oneWire1);
+DallasTemperature sensor2(&oneWire2);
+
+int16_t globalBaskingTemp = 0;
+int16_t globalWaterTemp = 0;
+
+unsigned long lastTempRequestTime = 0;
+bool tempConversionInProgress = false;
+unsigned long lastReadTemp;
+const unsigned long readTempInterval = 5000;
 
 unsigned long lastPublishCurrent;
 const unsigned long publishCurrentInterval = 4000;
@@ -145,6 +164,43 @@ void initializeOLED()
   display.setTextColor(SSD1306_WHITE);
 }
 
+// Function to initialize DS18B20
+void initializeDS18B20()
+{
+  sensor1.begin();
+  sensor2.begin();
+  sensor1.setWaitForConversion(false); // Non-blocking
+  sensor2.setWaitForConversion(false);
+}
+
+void readTemperature()
+{
+  // if (motorRunning) return;  // Avoid blocking feeder logic
+
+  unsigned long nowMs = millis();
+
+  // Step 1: Start temp conversion (assumed interval handled externally)
+  if (!tempConversionInProgress)
+  {
+    sensor1.requestTemperatures();
+    sensor2.requestTemperatures();
+    tempConversionInProgress = true;
+    lastTempRequestTime = nowMs; // Now used for the 750ms delay only
+    return;
+  }
+
+  // Step 2: After 750ms, read temps
+  if (tempConversionInProgress && (nowMs - lastTempRequestTime >= 750))
+  {
+    globalBaskingTemp = (int16_t)round(sensor1.getTempFByIndex(0));
+    globalWaterTemp = (int16_t)round(sensor2.getTempFByIndex(0));
+    tempConversionInProgress = false;
+
+    mqtt.getClient().publish("turtle/basking_temperature", String(globalBaskingTemp).c_str(), true);
+    mqtt.getClient().publish("turtle/water_temperature", String(globalWaterTemp).c_str(), true);
+  }
+}
+
 // Function to format time in 12-hour format
 String formatTime12Hour(int hour, int minute)
 {
@@ -165,12 +221,12 @@ void OledDisplayUpdate()
 
   display.setCursor(0, 33);
   display.print("BT: ");
-  display.print(tempSensors.getBaskingTemp());
+  display.print(globalBaskingTemp);
   display.print(" F");
 
   display.setCursor(0, 54);
   display.print("WT: ");
-  display.print(tempSensors.getWaterTemp());
+  display.print(globalWaterTemp);
   display.print(" F fc:");
   display.print(feeder.getFeedCount());
 
@@ -188,12 +244,12 @@ void displayData(int16_t baskingTemp, int16_t waterTemp, DateTime now)
 
   display.setCursor(0, 33);
   display.print("BT: ");
-  display.print(tempSensors.getBaskingTemp());
+  display.print(baskingTemp);
   display.print(" F");
 
   display.setCursor(0, 54);
   display.print("WT: ");
-  display.print(tempSensors.getWaterTemp());
+  display.print(waterTemp);
   display.print("F fc:");
   display.print(feeder.getFeedCount());
 
@@ -290,7 +346,7 @@ void setup()
 
   // Initialize components
   initializeOLED();
-  tempSensors.begin(4, 5); // your pins for basking/water DS18B20s
+  initializeDS18B20();
 
   wifi.begin();
 
@@ -303,7 +359,7 @@ void setup()
   mqtt.setOnReconnectSuccess([]()
                              {
     publishStatus();
-    tempSensors.publishNow(&mqtt.getClient()); // push temps immediately on reconnect
+    readTemperature();
     publishCurrent(); });
 
   feeder.begin(&mqtt.getClient(), &autoMode);
@@ -362,8 +418,11 @@ void loop()
     publishCurrent();
   }
 
-  tempSensors.updateReadings(3000);
-  tempSensors.publishIfDue(5000, &mqtt.getClient());
+  if (millis() - lastReadTemp >= readTempInterval)
+  {
+    lastReadTemp = millis();
+    readTemperature();
+  }
 
   if (millis() - lastStatusPublish >= statusPublishInterval)
   {

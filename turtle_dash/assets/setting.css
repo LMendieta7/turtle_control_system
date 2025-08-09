@@ -1,0 +1,37 @@
+.time-select {
+    display: flex;
+    align-items: bottom;
+    gap: 0.1vw;
+}
+
+.dropdown {
+    width: 50px;
+}
+
+.time-label {
+    font-weight: bold;
+    margin-top: 0.8vh;
+    text-align: center;
+    justify-content: center;
+}
+
+.time-dropdowns {
+    display: flex;
+    gap: 8px;
+}
+
+.time-separator {
+    font-weight: bold;
+    font-size: 20px;
+    padding: 0 4px;
+    color: #333;
+}
+
+.time-row {
+    display: flex;
+    gap: 35px;
+    flex-wrap: wrap;
+    align-items: center;
+    margin-top: 10px;
+}
+
