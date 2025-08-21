@@ -13,6 +13,7 @@
 #include "lights/light_manager.h"
 #include "temp_sensor/temp_sensor_manager.h"
 #include "current_sensor/current_sensor_manager.h"
+#include "status/status_publisher.h"
 
 CurrentSensorManager currents;
 TempSensorManager tempSensors;
@@ -26,6 +27,8 @@ MqttManager mqtt;
 FeederManager feeder;
 LightManager lights;
 
+StatusPublisher statusPub(lights, feeder, autoMode, mqtt);
+
 // OLED display dimensions
 #define SCREEN_WIDTH 128
 #define SCREEN_HEIGHT 64
@@ -35,50 +38,6 @@ Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1);
 
 unsigned long lastOledUpdate;
 const unsigned long oledUpInterval = 3000;
-
-unsigned long lastStatusPublish = 0;
-const unsigned long statusPublishInterval = 5000;
-
-// prototype
-
-uint32_t getFreeHeap();
-
-void publishStatus()
-{
-  // Read only the basking pin for combined light state
-  String lightStatus = lights.isOn() ? "ON" : "OFF";
-  mqtt.getClient().publish("turtle/lights_state", lightStatus.c_str(), true);
-
-  // Feeder status
-  const char *feederStatus = feeder.isRunning() ? "RUNNING" : "IDLE";
-  mqtt.getClient().publish("turtle/feeder_state", feederStatus);
-
-  // Auto mode status
-  mqtt.getClient().publish("turtle/auto_mode_state", autoMode.isEnabled() ? "on" : "off", true);
-
-  mqtt.getClient().publish("turtle/feed_count", String(feeder.getFeedCount()).c_str(), true);
-
-  // publish current IP
-  String ip = WiFi.localIP().toString();
-  mqtt.getClient().publish("turtle/esp_ip", ip.c_str(), true);
-
-  // mqtt status
-  const char *mqttStatus = mqtt.getClient().connected() ? "connected" : "disconnected";
-  mqtt.getClient().publish("turtle/esp_mqtt", mqttStatus, true);
-
-  String heapStr = String(getFreeHeap() / 1024) + " KB";
-  mqtt.getClient().publish("turtle/heap", heapStr.c_str(), true);
-
-  // Publish  uptime in ms
-  uint64_t uptime_ms = esp_timer_get_time() / 1000; // convert microseconds to milliseconds
-  mqtt.getClient().publish("turtle/esp_uptime_ms", String(uptime_ms).c_str(), true);
-}
-
-// Get free heap (available RAM)
-uint32_t getFreeHeap()
-{
-  return esp_get_free_heap_size();
-}
 
 // Function to initialize OLED
 void initializeOLED()
@@ -209,7 +168,11 @@ void setup()
 
   // Initialize components
   initializeOLED();
-  tempSensors.begin(4, 5); // your pins for basking/water DS18B20s
+  tempSensors.begin(mqtt.getClient(),
+                  4,
+                  5,
+                  3000,
+                  5000); // your pins for basking/water DS18B20s
 
   wifi.begin();
 
@@ -223,33 +186,22 @@ void setup()
       /*thHeatA=*/0.20f,
       /*thUvA=*/0.05f);
 
-  // Setup MQTT
+  // currents.setAutoZeroOnLightsOff(true);
+
+  statusPub.begin(5000); // publish every 5s
+  //  Setup MQTT
   mqtt.begin("172.22.80.5", 1883);
   mqtt.setCallback(mqttCallback);
   mqtt.reconnectIfNeeded();
   mqtt.setOnReconnectSuccess([&]()
                              {
-                               publishStatus();
-                               tempSensors.publishNow(&mqtt.getClient()); // push temps immediately on reconnect
+                               statusPub.publishNow();
+                               tempSensors.publishNow(); // push temps immediately on reconnect
                              });
 
   feeder.begin(&mqtt.getClient(), &autoMode);
   autoMode.begin(&mqtt.getClient());
   lights.begin(&mqtt.getClient(), &autoMode);
-
-  display.clearDisplay();
-  display.setTextSize(1);
-
-  display.setCursor(0, 14);
-  display.display();
-  delay(2000);
-
-  display.clearDisplay();
-  display.setTextSize(1);
-  display.print("Free RAM: ");
-  display.print(getFreeHeap() / 1024.0);
-  display.println(" KB");
-  display.display();
 
   ArduinoOTA.begin();
   delay(1000);
@@ -284,12 +236,7 @@ void loop()
     OledDisplayUpdate();
   }
 
-  tempSensors.updateReadings(3000);
-  tempSensors.publishIfDue(5000, &mqtt.getClient());
-
-  if (millis() - lastStatusPublish >= statusPublishInterval)
-  {
-    lastStatusPublish = millis();
-    publishStatus(); // Periodic status update
-  }
+  tempSensors.updateReadings();
+  tempSensors.publishIfDue();
+  statusPub.update();
 }

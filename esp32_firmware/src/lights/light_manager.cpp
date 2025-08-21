@@ -1,4 +1,5 @@
 #include "light_manager.h"
+#include "auto_mode/auto_mode_manager.h"
 
 void LightManager::begin(PubSubClient *mqttClient, AutoModeManager *autoModeManager)
 {

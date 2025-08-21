@@ -4,7 +4,8 @@
 #include <Arduino.h>
 #include <PubSubClient.h>
 #include <RTClib.h>
-#include "auto_mode/auto_mode_manager.h"
+
+class AutoModeManager;
 
 class FeederManager
 {

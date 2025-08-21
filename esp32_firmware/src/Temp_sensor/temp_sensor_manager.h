@@ -1,23 +1,27 @@
 #ifndef TEMP_SENSOR_MANAGER_H
 #define TEMP_SENSOR_MANAGER_H
 
-#include <PubSubClient.h>
+class PubSubClient;
 #include "ds18b20_sensor.h"
 
 class TempSensorManager
 {
 public:
     // Provide pins for each DS18B20
-    void begin(uint8_t baskingPin, uint8_t waterPin);
+    void begin(PubSubClient &mqttClient,
+               uint8_t baskingPin,
+               uint8_t waterPin,
+               unsigned long readIntervalMs,
+               unsigned long publishIntervalMs);
 
     // 1) Refresh readings on your chosen cadence (non-blocking)
-    void updateReadings(unsigned long readIntervalMs);
+    void updateReadings();
 
     // 2) Publish latest cached readings if publish interval elapsed
-    void publishIfDue(unsigned long publishIntervalMs, PubSubClient *mqtt);
+    void publishIfDue();
 
     // 3) Publish immediately (e.g., after MQTT reconnect)
-    void publishNow(PubSubClient *mqtt);
+    void publishNow();
 
     // Accessors for OLED/UI
     int getBaskingTemp() const;
@@ -26,6 +30,14 @@ public:
 private:
     DS18B20Sensor basking{"basking"};
     DS18B20Sensor water{"water"};
+
+    // Cross-services (wired in begin)
+    PubSubClient *mqtt = nullptr;
+
+    // Timing
+
+    unsigned long readIntMs = 3000;
+    unsigned long pubIntervalMs = 5000;
 
     // Reading cadence
     unsigned long lastReadTick = 0;

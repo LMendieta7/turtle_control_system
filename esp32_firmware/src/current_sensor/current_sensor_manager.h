@@ -66,7 +66,7 @@ private:
     unsigned long lastRunMs = 0;
 
     // Auto-zero after lights OFF for a quiet period
-    bool autoZero = true;
+    bool autoZero = false;
     uint32_t autoZeroQuietMs = 2000;
     bool wasLightsOn = false;
     uint32_t lightsOffSinceMs = 0;
@@ -74,6 +74,11 @@ private:
     // Last readings
     float lastHeat = 0.0f;
     float lastUv = 0.0f;
+
+    // soft mute when lights are off
+
+    bool muteLightsOff = true;
+    bool offAnnounced = false;
 
     // Topics centralized here
     static constexpr const char *TOP_HEAT_CURRENT = "turtle/heat_bulb/current";

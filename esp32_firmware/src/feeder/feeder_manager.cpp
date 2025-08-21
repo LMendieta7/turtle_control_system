@@ -1,5 +1,6 @@
 #include "feeder_manager.h"
 #include <Preferences.h>
+#include "auto_mode/auto_mode_manager.h"
 
 void FeederManager::begin(PubSubClient *mqttClient, AutoModeManager *autoModeManager)
 {

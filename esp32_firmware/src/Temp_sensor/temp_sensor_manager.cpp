@@ -1,17 +1,25 @@
 #include "temp_sensor_manager.h"
+#include <PubSubClient.h>
 
-void TempSensorManager::begin(uint8_t baskingPin, uint8_t waterPin)
+void TempSensorManager::begin(PubSubClient &mqttClient,
+                              uint8_t baskingPin,
+                              uint8_t waterPin,
+                              unsigned long readIntervalMs,
+                              unsigned long publishIntervalMs)
 {
+    mqtt = &mqttClient;
     basking.begin(baskingPin);
     water.begin(waterPin);
+    readIntMs = readIntervalMs;
+    pubIntervalMs = publishIntervalMs;
 }
 
-void TempSensorManager::updateReadings(unsigned long readIntervalMs)
+void TempSensorManager::updateReadings()
 {
     unsigned long now = millis();
 
     // Kick off a new conversion every readIntervalMs
-    if (!waitingForRead && (now - lastReadTick >= readIntervalMs))
+    if (!waitingForRead && (now - lastReadTick >= readIntMs))
     {
         basking.requestTemperature();
         water.requestTemperature();
@@ -34,17 +42,17 @@ void TempSensorManager::updateReadings(unsigned long readIntervalMs)
     }
 }
 
-void TempSensorManager::publishIfDue(unsigned long publishIntervalMs, PubSubClient *mqtt)
+void TempSensorManager::publishIfDue()
 {
     unsigned long now = millis();
-    if (now - lastPublishTick < publishIntervalMs)
+    if (now - lastPublishTick < pubIntervalMs)
         return;
 
-    publishNow(mqtt);
+    publishNow();
     lastPublishTick = now;
 }
 
-void TempSensorManager::publishNow(PubSubClient *mqtt)
+void TempSensorManager::publishNow()
 {
     // Publish whatever the latest cached temps are (even if they’re from <publishIntervalMs ago)
     mqtt->publish("turtle/basking_temperature", String(basking.getTemperatureF()).c_str(), true);

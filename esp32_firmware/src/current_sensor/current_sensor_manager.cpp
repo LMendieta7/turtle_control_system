@@ -61,6 +61,22 @@ void CurrentSensorManager::publishNow()
     if (feeder->isRunning())
         return;
 
+    // Mute when lights are OFF
+    if (muteLightsOff && !lights->isOn())
+    {
+        if (!offAnnounced)
+        {
+            mqtt->publish(TOP_HEAT_STATUS, "OFF", true);
+            mqtt->publish(TOP_UV_STATUS, "OFF", true);
+            mqtt->publish(TOP_HEAT_CURRENT, "0.00", true);
+            mqtt->publish(TOP_UV_CURRENT, "0.00", true);
+            offAnnounced = true;
+        }
+        // no currents while OFF
+        lastRunMs = millis();
+        return;
+    }
+
     sampleAndPublish_(heat, lastHeat, TOP_HEAT_CURRENT, TOP_HEAT_STATUS);
     sampleAndPublish_(uv, lastUv, TOP_UV_CURRENT, TOP_UV_STATUS);
 
@@ -83,6 +99,22 @@ void CurrentSensorManager::readAndPublish()
     // Safety: skip while feeder is running
     if (feeder->isRunning())
         return;
+
+    // Mute when lights are OFF
+    if (muteLightsOff && !lights->isOn())
+    {
+        if (!offAnnounced)
+        {
+            mqtt->publish(TOP_HEAT_STATUS, "OFF", true);
+            mqtt->publish(TOP_UV_STATUS, "OFF", true);
+            mqtt->publish(TOP_HEAT_CURRENT, "0.00", true);
+            mqtt->publish(TOP_UV_CURRENT, "0.00", true);
+            offAnnounced = true;
+        }
+        // no currents while OFF
+        lastRunMs = millis();
+        return;
+    }
 
     // Timer
     if (now - lastRunMs < intervalMs)
@@ -126,7 +158,14 @@ void CurrentSensorManager::trackLightsForAutoZero_(unsigned long now)
     if (wasLightsOn && !on)
     {
         lightsOffSinceMs = now;
+        offAnnounced = false;
     }
+
+    if (!wasLightsOn && on)
+    {
+        offAnnounced = false;
+    }
+
     wasLightsOn = on;
 
     // If lights are OFF and it's been quiet long enough, re-zero
@@ -134,8 +173,8 @@ void CurrentSensorManager::trackLightsForAutoZero_(unsigned long now)
     {
         if (lightsOffSinceMs && (now - lightsOffSinceMs >= autoZeroQuietMs))
         {
-            heat.calibrateOffset();
-            uv.calibrateOffset();
+            heat.calibrateOffset(60, 3);
+            uv.calibrateOffset(60, 3);
             // Prevent repeated re-zero until lights toggle again
             lightsOffSinceMs = 0;
         }
