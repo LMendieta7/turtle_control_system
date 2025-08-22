@@ -1,0 +1,44 @@
+/* NAVBAR CONTAINER */
+.navbar {
+    display: flex;
+    align-items: center;
+    background-color: #004080;
+    padding: 9px 20px;
+    color: white;
+    position:relative;
+}
+
+/* LEFT LINKS */
+.nav-links {
+    display: flex;
+    flex: 1;
+    gap: 48px;
+
+    
+}
+
+.nav-link {
+    color: white;
+    text-decoration: none;
+    font-weight: bold;
+    font-size: 17px;
+    padding-bottom: 4px;
+    border-bottom: 3px solid transparent;
+    transition: border 0.3s ease;
+    
+}
+
+.nav-link:hover {
+    border-bottom: 3px solid #ffffff80;
+}
+
+.nav-link.active {
+    border-bottom: 3px solid white;
+}
+
+/* RIGHT USER ICON */
+.user-icon {
+    font-size: 24px;
+    color: white;
+    margin-right: 1px;
+}
