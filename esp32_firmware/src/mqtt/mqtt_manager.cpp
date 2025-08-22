@@ -1,4 +1,5 @@
 #include "mqtt_manager.h"
+#include "mqtt_command_router.h"
 
 void MqttManager::begin(const char *server, int port)
 {
@@ -33,7 +34,6 @@ void MqttManager::reconnectIfNeeded()
         if (client.connect("Esp32_Client"))
         {
             Serial.println("connected");
-            subscribeToTopics();
 
             if (onReconnectSuccess)
             {
@@ -49,20 +49,6 @@ void MqttManager::reconnectIfNeeded()
 
         delay(5); // short delay to avoid spam
     }
-}
-void MqttManager::subscribe(const char *topic)
-{
-    if (client.connected())
-    {
-        client.subscribe(topic);
-    }
-}
-
-void MqttManager::subscribeToTopics()
-{
-    client.subscribe("turtle/feed");
-    client.subscribe("turtle/lights");
-    client.subscribe("turtle/auto_mode");
 }
 
 bool MqttManager::isConnected()
