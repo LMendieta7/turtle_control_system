@@ -1,5 +1,6 @@
 #include "light_manager.h"
 #include "auto_mode/auto_mode_manager.h"
+#include "topics.h"
 
 void LightManager::begin(PubSubClient *mqttClient, AutoModeManager *autoModeManager)
 {
@@ -57,7 +58,7 @@ void LightManager::heatOn()
 {
     digitalWrite(BASKING_LIGHT_PIN, HIGH);
     heatIsOn = true;
-    client->publish("turtle/heat_status", heatIsOn ? "ON" : "OFF", true);
+    client->publish(TOPIC_HEAT_STATUS, "ON", true);
 }
 
 void LightManager::heatOff()
@@ -65,6 +66,7 @@ void LightManager::heatOff()
 
     digitalWrite(BASKING_LIGHT_PIN, LOW);
     heatIsOn = false;
+    client->publish(TOPIC_HEAT_STATUS, "OFF", true);
 }
 
 void LightManager::uvOn()
@@ -72,7 +74,7 @@ void LightManager::uvOn()
 
     digitalWrite(UV_LIGHT_PIN, HIGH);
     uvIsOn = true;
-    client->publish("turtle/uv_status", uvIsOn ? "ON" : "OFF", true);
+    client->publish(TOPIC_UV_STATUS, "ON", true);
 }
 
 void LightManager::uvOff()
@@ -80,6 +82,7 @@ void LightManager::uvOff()
 
     digitalWrite(UV_LIGHT_PIN, LOW);
     uvIsOn = false;
+    client->publish(TOPIC_UV_STATUS, "OFF", true);
 }
 
 bool LightManager::isOn() const
@@ -98,5 +101,5 @@ void LightManager::publishState()
     if (!client)
         return;
     const char *state = lightsAreOn ? "ON" : "OFF";
-    client->publish("turtle/lights_state", state, true);
+    client->publish(TOPIC_LIGHTS_STATUS, state, true);
 }

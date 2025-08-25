@@ -2,6 +2,7 @@
 #include <PubSubClient.h>
 #include "lights/light_manager.h"
 #include "feeder/feeder_manager.h"
+#include "topics.h"
 
 CurrentSensorManager::CurrentSensorManager(uint8_t adsAddr)
     : ads(adsAddr),
@@ -66,10 +67,10 @@ void CurrentSensorManager::publishNow()
     {
         if (!offAnnounced)
         {
-            mqtt->publish(TOP_HEAT_STATUS, "OFF", true);
-            mqtt->publish(TOP_UV_STATUS, "OFF", true);
-            mqtt->publish(TOP_HEAT_CURRENT, "0.00", true);
-            mqtt->publish(TOP_UV_CURRENT, "0.00", true);
+            mqtt->publish(TOPIC_HEAT_STATUS, "OFF", true);
+            mqtt->publish(TOPIC_UV_STATUS, "OFF", true);
+            mqtt->publish(TOPIC_CURRENT_HEAT, "0.00", true);
+            mqtt->publish(TOPIC_CURRENT_UV, "0.00", true);
             offAnnounced = true;
         }
         // no currents while OFF
@@ -77,8 +78,8 @@ void CurrentSensorManager::publishNow()
         return;
     }
 
-    sampleAndPublish_(heat, lastHeat, TOP_HEAT_CURRENT, TOP_HEAT_STATUS);
-    sampleAndPublish_(uv, lastUv, TOP_UV_CURRENT, TOP_UV_STATUS);
+    sampleAndPublish_(heat, lastHeat, TOPIC_CURRENT_HEAT, TOPIC_HEAT_STATUS);
+    sampleAndPublish_(uv, lastUv, TOPIC_CURRENT_UV, TOPIC_UV_STATUS);
 
     // Reset interval timer
     lastRunMs = millis();
@@ -105,10 +106,10 @@ void CurrentSensorManager::readAndPublish()
     {
         if (!offAnnounced)
         {
-            mqtt->publish(TOP_HEAT_STATUS, "OFF", true);
-            mqtt->publish(TOP_UV_STATUS, "OFF", true);
-            mqtt->publish(TOP_HEAT_CURRENT, "0.00", true);
-            mqtt->publish(TOP_UV_CURRENT, "0.00", true);
+            mqtt->publish(TOPIC_HEAT_STATUS, "OFF", true);
+            mqtt->publish(TOPIC_UV_STATUS, "OFF", true);
+            mqtt->publish(TOPIC_CURRENT_HEAT, "0.00", true);
+            mqtt->publish(TOPIC_CURRENT_UV, "0.00", true);
             offAnnounced = true;
         }
         // no currents while OFF
@@ -122,8 +123,8 @@ void CurrentSensorManager::readAndPublish()
     lastRunMs = now;
 
     // Read + publish both channels
-    sampleAndPublish_(heat, lastHeat, TOP_HEAT_CURRENT, TOP_HEAT_STATUS);
-    sampleAndPublish_(uv, lastUv, TOP_UV_CURRENT, TOP_UV_STATUS);
+    sampleAndPublish_(heat, lastHeat, TOPIC_CURRENT_HEAT, TOPIC_HEAT_STATUS);
+    sampleAndPublish_(uv, lastUv, TOPIC_CURRENT_UV, TOPIC_UV_STATUS);
 }
 
 void CurrentSensorManager::sampleAndPublish_(Zmct103cSensor &s, float &lastA,

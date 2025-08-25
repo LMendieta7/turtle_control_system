@@ -84,7 +84,6 @@ void setup()
   //  Setup MQTT
   mqtt.begin("172.22.80.5", 1883);
   cmdRouter.begin(mqtt.getClient(), autoMode, feeder, lights);
-  cmdRouter.setTopicPrefix("turtle/"); 
   cmdRouter.attach();
   mqtt.setOnReconnectSuccess([&]()
                              {

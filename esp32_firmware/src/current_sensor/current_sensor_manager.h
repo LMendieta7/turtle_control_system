@@ -5,6 +5,7 @@
 #include "ads1115/ads1115_driver.h"
 #include "current_sensor/zmct103c_sensor.h"
 
+
 // Lightweight forward declares
 class PubSubClient;
 class LightManager;
@@ -79,12 +80,6 @@ private:
 
     bool muteLightsOff = true;
     bool offAnnounced = false;
-
-    // Topics centralized here
-    static constexpr const char *TOP_HEAT_CURRENT = "turtle/heat_bulb/current";
-    static constexpr const char *TOP_HEAT_STATUS = "turtle/heat_bulb/status";
-    static constexpr const char *TOP_UV_CURRENT = "turtle/uv_bulb/current";
-    static constexpr const char *TOP_UV_STATUS = "turtle/uv_bulb/status";
 
     // Internals
     void sampleAndPublish_(Zmct103cSensor &s, float &lastA,

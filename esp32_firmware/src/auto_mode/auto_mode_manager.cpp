@@ -1,5 +1,5 @@
 #include "auto_mode_manager.h"
-
+#include "topics.h"
 void AutoModeManager::begin(PubSubClient *mqttClient)
 {
     client = mqttClient;
@@ -45,6 +45,6 @@ void AutoModeManager::publishState()
 {
     if (client && client->connected())
     {
-        client->publish("turtle/auto_mode_state", autoModeEnabled ? "on" : "off", true);
+        client->publish(TOPIC_AUTO_MODE_STATUS, autoModeEnabled ? "on" : "off", true);
     }
 }

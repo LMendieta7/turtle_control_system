@@ -1,18 +1,28 @@
 # mqtt/topics.py
 
 TOPICS = [
-    "turtle/basking_temperature",
-    "turtle/water_temperature",
-    "turtle/lights_state",
-    "turtle/feeder_state",
-    "turtle/auto_mode_state",
-    "turtle/feed_count",
-    "turtle/esp_ip",
-    "turtle/heap",
-    "turtle/esp_uptime_ms",
-    "turtle/esp_mqtt",
-    "turtle/heat_bulb/current",
-    "turtle/uv_bulb/current",
-    "turtle/heat_bulb/status",
-    "turtle/uv_bulb/status"
+    # Sensors (telemetry)
+    "turtle/sensors/temp/basking",
+    "turtle/sensors/temp/water",
+    "turtle/sensors/current/heat",
+    "turtle/sensors/current/uv",
+
+    # Lights
+    "turtle/lights/status",          # ON/OFF both bulbs
+    "turtle/lights/schedule",        # JSON {"on":"HH:MM","off":"HH:MM"} (retained)
+    "turtle/lights/heat/status",     # ON/OFF  individual bulb
+    "turtle/lights/uv/status",       # ON/OFF individual bulb
+
+    # Feeder
+    "turtle/feeder/state",           # IDLE/RUNNING
+    "turtle/feeder/count",
+
+    # Auto mode
+    "turtle/auto_mode/status",       # on/off
+
+    # ESP / health
+    "turtle/esp/ip",
+    "turtle/esp/heap",
+    "turtle/esp/uptime_ms",
+    "turtle/esp/mqtt",
 ]

@@ -19,9 +19,6 @@ public:
                FeederManager &feederRef,
                LightManager &lightsRef);
 
-    // Optional: change prefix (default "turtle/"); must end with '/'
-    void setTopicPrefix(const char *prefix);
-
     // Install this router as PubSubClient's callback
     void attach();
 
@@ -58,15 +55,6 @@ private:
     AutoModeManager *autoMode = nullptr;
     FeederManager *feeder = nullptr;
     LightManager *lights = nullptr;
-
-    // Topics (built from prefix)
-    String prefix = "turtle/";
-    String tFeed;     // <prefix>feed
-    String tAutoMode; // <prefix>auto_mode
-    String tLights;   // <prefix>lights
-    String tHeatBulb; // <prefix>heat_bulb
-    String tUvBulb;   // <prefix>uv_bulb
-    String tReboot;   // <prefix>reboot
 
     // Active instance pointer (one router)
     static MqttCommandRouter *self;

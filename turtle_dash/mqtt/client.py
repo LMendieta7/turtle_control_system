@@ -28,34 +28,45 @@ def on_message(client, userdata, msg):
 
         topic, payload = msg.topic, msg.payload.decode()
 
-        if topic == "turtle/basking_temperature":
+        if topic == "turtle/sensors/temp/basking":
             basking_sensor.update(float(payload))
             return
-        if topic == "turtle/water_temperature":
+        if topic == "turtle/sensors/temp/water":
             water_sensor.update(float(payload))
             return
 
+        # Simple mapping for everything else (new topics → existing keys)
         mapping = {
-            "turtle/lights_state":    "light_status",
-            "turtle/feeder_state":    "feeder_state",
-            "turtle/auto_mode_state": "auto_mode",
-            "turtle/feed_count":      "feed_count",
-            "turtle/esp_ip":          "esp_ip",
-            "turtle/heap":            "heap",
-            "turtle/esp_uptime_ms":   "esp_uptime_ms",
-            "turtle/esp_mqtt":          "esp_mqtt",
-            "turtle/heat_bulb/current":   "heat_bulb_current",
-            "turtle/uv_bulb/current":     "uv_bulb_current",
-            "turtle/heat_bulb/status":    "heat_bulb_status",
-            "turtle/uv_bulb/status":      "uv_bulb_status"
+            # Lights
+            "turtle/lights/status":          ("light_status", str),
+            "turtle/lights/heat/status":     ("heat_bulb_status", str),
+            "turtle/lights/uv/status":       ("uv_bulb_status", str),
+
+            # Feeder
+            "turtle/feeder/state":           ("feeder_state", str),
+            "turtle/feeder/count":           ("feed_count", int),
+
+            # Auto mode
+            "turtle/auto_mode/status":       ("auto_mode", str),
+
+            # ESP / health
+            "turtle/esp/ip":                 ("esp_ip", str),
+            "turtle/esp/heap":               ("heap", int),
+            "turtle/esp/uptime_ms":          ("esp_uptime_ms", int),
+            "turtle/esp/mqtt":               ("esp_mqtt", str),
+
+            # Currents (new paths)
+            "turtle/sensors/current/heat":   ("heat_bulb_current", float),
+            "turtle/sensors/current/uv":     ("uv_bulb_current", float),
         }
-        key = mapping.get(topic)
-        if key:
-            if key in ("feed_count", "esp_uptime_ms"):
-                val = int(payload)
-            elif key in ("heat_bulb_current", "uv_bulb_current"):
-                val = float(payload)
-            else:
+
+        entry = mapping.get(topic)
+        if entry:
+            key, caster = entry
+            try:
+                val = caster(payload)
+            except Exception:
+                # fall back to raw if cast fails
                 val = payload
             status.update_status(key, val)
 

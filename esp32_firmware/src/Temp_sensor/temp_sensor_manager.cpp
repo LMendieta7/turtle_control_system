@@ -1,5 +1,6 @@
 #include "temp_sensor_manager.h"
 #include <PubSubClient.h>
+#include "topics.h"
 
 void TempSensorManager::begin(PubSubClient &mqttClient,
                               uint8_t baskingPin,
@@ -55,8 +56,8 @@ void TempSensorManager::publishIfDue()
 void TempSensorManager::publishNow()
 {
     // Publish whatever the latest cached temps are (even if they’re from <publishIntervalMs ago)
-    mqtt->publish("turtle/basking_temperature", String(basking.getTemperatureF()).c_str(), true);
-    mqtt->publish("turtle/water_temperature", String(water.getTemperatureF()).c_str(), true);
+    mqtt->publish(TOPIC_TEMP_BASKING, String(basking.getTemperatureF()).c_str(), true);
+    mqtt->publish(TOPIC_TEMP_WATER, String(water.getTemperatureF()).c_str(), true);
 
     // If you want to only publish when changed, track last published values here
     // and early-return when unchanged.
