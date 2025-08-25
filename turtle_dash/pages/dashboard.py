@@ -94,8 +94,8 @@ def update_status_display(n):
     upms = status.get_status("esp_uptime_ms", default=0)
     heat_current = status.get_status("heat_bulb_current", default=0.0)
     uv_current   = status.get_status("uv_bulb_current",   default=0.0)
-    heat_status  = status.get_status("heat_bulb_status",  default="OFF")
-    uv_status    = status.get_status("uv_bulb_status",    default="OFF")
+    heat_status  = status.get_status("heat_bulb_current_status",  default="OFF")
+    uv_status    = status.get_status("uv_bulb_current_status",    default="OFF")
     
     def bulb_stat_color(status):
         if status == "OK":

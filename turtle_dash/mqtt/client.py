@@ -58,6 +58,8 @@ def on_message(client, userdata, msg):
             # Currents (new paths)
             "turtle/sensors/current/heat":   ("heat_bulb_current", float),
             "turtle/sensors/current/uv":     ("uv_bulb_current", float),
+            "turtle/sensors/current/heat/status":   ("heat_bulb_current_status", str),
+            "turtle/sensors/current/uv/status":     ("uv_bulb_current_status", str),
         }
 
         entry = mapping.get(topic)

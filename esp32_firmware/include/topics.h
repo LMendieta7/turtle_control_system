@@ -20,6 +20,8 @@
 #define TOPIC_CURRENT_HEAT TOPIC_ROOT "sensors/current/heat" // float/number (amps)
 #define TOPIC_CURRENT_UV TOPIC_ROOT "sensors/current/uv"     // float/number (amps)
 
+#define TOPIC_CURRENT_HEAT_STATUS TOPIC_ROOT "sensors/current/heat/status"  //  "OK"/"FLT"
+#define TOPIC_CURRENT_UV_STATUS TOPIC_ROOT "sensors/current/uv/status"  //  "OK"/"FLT"
 // (Add more later, e.g.)
 // #define TOPIC_CURRENT_PUMP    TOPIC_ROOT "sensors/current/pump"
 // #define TOPIC_HUMIDITY_AIR    TOPIC_ROOT "sensors/humidity/air"

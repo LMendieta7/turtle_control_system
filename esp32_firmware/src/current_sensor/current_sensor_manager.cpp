@@ -67,8 +67,8 @@ void CurrentSensorManager::publishNow()
     {
         if (!offAnnounced)
         {
-            mqtt->publish(TOPIC_HEAT_STATUS, "OFF", true);
-            mqtt->publish(TOPIC_UV_STATUS, "OFF", true);
+            mqtt->publish(TOPIC_CURRENT_HEAT_STATUS, "OFF", true);
+            mqtt->publish(TOPIC_CURRENT_UV_STATUS, "OFF", true);
             mqtt->publish(TOPIC_CURRENT_HEAT, "0.00", true);
             mqtt->publish(TOPIC_CURRENT_UV, "0.00", true);
             offAnnounced = true;
@@ -78,8 +78,8 @@ void CurrentSensorManager::publishNow()
         return;
     }
 
-    sampleAndPublish_(heat, lastHeat, TOPIC_CURRENT_HEAT, TOPIC_HEAT_STATUS);
-    sampleAndPublish_(uv, lastUv, TOPIC_CURRENT_UV, TOPIC_UV_STATUS);
+    sampleAndPublish_(heat, lastHeat, TOPIC_CURRENT_HEAT, TOPIC_CURRENT_HEAT_STATUS);
+    sampleAndPublish_(uv, lastUv, TOPIC_CURRENT_UV, TOPIC_CURRENT_UV_STATUS);
 
     // Reset interval timer
     lastRunMs = millis();
@@ -106,8 +106,8 @@ void CurrentSensorManager::readAndPublish()
     {
         if (!offAnnounced)
         {
-            mqtt->publish(TOPIC_HEAT_STATUS, "OFF", true);
-            mqtt->publish(TOPIC_UV_STATUS, "OFF", true);
+            mqtt->publish(TOPIC_CURRENT_HEAT_STATUS, "OFF", true);
+            mqtt->publish(TOPIC_CURRENT_UV_STATUS, "OFF", true);
             mqtt->publish(TOPIC_CURRENT_HEAT, "0.00", true);
             mqtt->publish(TOPIC_CURRENT_UV, "0.00", true);
             offAnnounced = true;
@@ -123,8 +123,8 @@ void CurrentSensorManager::readAndPublish()
     lastRunMs = now;
 
     // Read + publish both channels
-    sampleAndPublish_(heat, lastHeat, TOPIC_CURRENT_HEAT, TOPIC_HEAT_STATUS);
-    sampleAndPublish_(uv, lastUv, TOPIC_CURRENT_UV, TOPIC_UV_STATUS);
+    sampleAndPublish_(heat, lastHeat, TOPIC_CURRENT_HEAT, TOPIC_CURRENT_HEAT_STATUS);
+    sampleAndPublish_(uv, lastUv, TOPIC_CURRENT_UV, TOPIC_CURRENT_UV_STATUS);
 }
 
 void CurrentSensorManager::sampleAndPublish_(Zmct103cSensor &s, float &lastA,

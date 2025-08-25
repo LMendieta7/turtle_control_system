@@ -6,6 +6,9 @@ TOPICS = [
     "turtle/sensors/temp/water",
     "turtle/sensors/current/heat",
     "turtle/sensors/current/uv",
+    "turtle/sensors/current/heat/status",
+    "turtle/sensors/current/uv/status",
+
 
     # Lights
     "turtle/lights/status",          # ON/OFF both bulbs
