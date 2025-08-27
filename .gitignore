@@ -2,6 +2,9 @@
 __pycache__/
 *.pyc
 
+*.zip
+esp32_firmware/*.zip
+
 # Python virtual environments (any location)
 venv/
 env/
