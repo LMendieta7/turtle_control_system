@@ -11,8 +11,8 @@ void setup()
     preferences.begin("wifi-creds", false);
 
     // Save Wi-Fi credentials
-    preferences.putString("ssid", "network name here");
-    preferences.putString("password", "password here");
+    preferences.putString("ssid", "network name here"); // add SSID here
+    preferences.putString("password", "password here"); // password here
 
     Serial.println("Wi-Fi credentials saved!");
 
