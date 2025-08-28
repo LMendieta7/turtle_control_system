@@ -94,8 +94,8 @@ def update_status_display(n):
     upms = status.get_status("esp_uptime_ms", default=0)
     heat_current = status.get_status("heat_bulb_current", default=0.0)
     uv_current   = status.get_status("uv_bulb_current",   default=0.0)
-    heat_status  = status.get_status("heat_bulb_status",  default="OFF")
-    uv_status    = status.get_status("uv_bulb_status",    default="OFF")
+    heat_status  = status.get_status("heat_bulb_current_status",  default="OFF")
+    uv_status    = status.get_status("uv_bulb_current_status",    default="OFF")
     
     def bulb_stat_color(status):
         if status == "OK":
@@ -197,7 +197,7 @@ def update_gauges(n):
 )
 def on_feed_click(n, auto_on):
     if auto_on: return 0
-    mqtt_client.publish("turtle/feed","1")
+    mqtt_client.publish("turtle/feeder/cmd","1")
     return 0
 
 @dash.callback(
@@ -242,7 +242,7 @@ def render_light(light_s):
 def on_light_click(n, auto_on, cur):
     if auto_on: return 0
     new = "OFF" if cur=="ON" else "ON"
-    mqtt_client.publish("turtle/lights", new)
+    mqtt_client.publish("turtle/lights/cmd", new)
     return 0
 
 # ─── AUTO MODE STORE UPDATE ───────────────────────────────────────────
@@ -258,7 +258,7 @@ def update_auto_store(n_clicks, n_intervals, current, cooldown_until):
     triggered = callback_context.triggered[0]["prop_id"].split(".")[0]
     if triggered == "auto-toggle-btn":
         new = not current
-        mqtt_client.publish("turtle/auto_mode", "on" if new else "off")
+        mqtt_client.publish("turtle/auto_mode/cmd", "on" if new else "off")
         return new
     # Only sync to broker if cooldown has expired
     if now < cooldown_until:

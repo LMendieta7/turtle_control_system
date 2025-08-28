@@ -33,16 +33,6 @@ public:
 private:
     void publishAll_();
 
-    // Topics
-    static constexpr const char *T_LIGHTS = "turtle/lights_state";
-    static constexpr const char *T_FEEDER = "turtle/feeder_state";
-    static constexpr const char *T_AUTO = "turtle/auto_mode_state";
-    static constexpr const char *T_FEED_COUNT = "turtle/feed_count";
-    static constexpr const char *T_IP = "turtle/esp_ip";
-    static constexpr const char *T_MQTT = "turtle/esp_mqtt";
-    static constexpr const char *T_HEAP = "turtle/heap";
-    static constexpr const char *T_UPTIME = "turtle/esp_uptime_ms";
-
     // Retained flags
     static constexpr bool R_LIGHTS = true;
     static constexpr bool R_FEEDER = false;

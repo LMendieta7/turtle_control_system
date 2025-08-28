@@ -1,6 +1,7 @@
 #include "feeder_manager.h"
 #include <Preferences.h>
 #include "auto_mode/auto_mode_manager.h"
+#include "topics.h"
 
 void FeederManager::begin(PubSubClient *mqttClient, AutoModeManager *autoModeManager)
 {
@@ -132,8 +133,8 @@ void FeederManager::publishState(const char *state)
 {
     if (client)
     {
-        client->publish("turtle/feeder_state", state, true);
-        client->publish("turtle/feed_count", String(feedCount).c_str(), true);
+        client->publish(TOPIC_FEEDER_STATE, state, true);
+        client->publish(TOPIC_FEEDER_COUNT, String(feedCount).c_str(), true);
     }
 }
 

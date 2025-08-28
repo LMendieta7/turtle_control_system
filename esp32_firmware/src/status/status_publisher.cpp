@@ -8,11 +8,12 @@
 #include "auto_mode/auto_mode_manager.h"
 #include "feeder/feeder_manager.h"
 #include "lights/light_manager.h"
+#include "topics.h"
 
-StatusPublisher::StatusPublisher(LightManager& lights,
-                                 FeederManager& feeder,
-                                 AutoModeManager& autoMode,
-                                 MqttManager& mqtt)
+StatusPublisher::StatusPublisher(LightManager &lights,
+                                 FeederManager &feeder,
+                                 AutoModeManager &autoMode,
+                                 MqttManager &mqtt)
     : lights_(lights),
       feeder_(feeder),
       autoMode_(autoMode),
@@ -61,47 +62,47 @@ void StatusPublisher::publishAll_()
     // Lights
     {
         String v = lights_.isOn() ? "ON" : "OFF";
-        client.publish(T_LIGHTS, v.c_str(), R_LIGHTS);
+        client.publish(TOPIC_LIGHTS_STATUS, v.c_str(), R_LIGHTS);
     }
 
     // Feeder
     {
         const char *v = feeder_.isRunning() ? "RUNNING" : "IDLE";
-        client.publish(T_FEEDER, v, R_FEEDER);
+        client.publish(TOPIC_FEEDER_STATE, v, R_FEEDER);
 
         String countStr(feeder_.getFeedCount());
-        client.publish(T_FEED_COUNT, countStr.c_str(), R_FEED_COUNT);
+        client.publish(TOPIC_FEEDER_COUNT, countStr.c_str(), R_FEED_COUNT);
     }
 
     // Auto mode
     {
         const char *v = autoMode_.isEnabled() ? "on" : "off";
-        client.publish(T_AUTO, v, R_AUTO);
+        client.publish(TOPIC_AUTO_MODE_STATUS, v, R_AUTO);
     }
 
     // IP
     {
         String ip = WiFi.localIP().toString();
-        client.publish(T_IP, ip.c_str(), R_IP);
+        client.publish(TOPIC_ESP_IP, ip.c_str(), R_IP);
     }
 
     // MQTT status echo
     {
         const char *v = client.connected() ? "connected" : "disconnected";
-        client.publish(T_MQTT, v, R_MQTT);
+        client.publish(TOPIC_ESP_MQTT, v, R_MQTT);
     }
 
     // Heap (KB)
     {
         size_t heapBytes = esp_get_free_heap_size();
         String heapStr = String(heapBytes / 1024) + " KB";
-        client.publish(T_HEAP, heapStr.c_str(), R_HEAP);
+        client.publish(TOPIC_ESP_HEAP, heapStr.c_str(), R_HEAP);
     }
 
     // Uptime (ms)
     {
         uint64_t uptime_ms = esp_timer_get_time() / 1000ULL;
         String upStr = String((unsigned long long)uptime_ms);
-        client.publish(T_UPTIME, upStr.c_str(), R_UPTIME);
+        client.publish(TOPIC_ESP_UPTIME, upStr.c_str(), R_UPTIME);
     }
 }

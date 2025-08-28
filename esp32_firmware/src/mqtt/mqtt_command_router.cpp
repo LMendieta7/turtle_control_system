@@ -2,6 +2,8 @@
 #include "auto_mode/auto_mode_manager.h"
 #include "feeder/feeder_manager.h"
 #include "lights/light_manager.h"
+#include "topics.h"
+#include <ArduinoJson.h>
 
 MqttCommandRouter *MqttCommandRouter::self = nullptr;
 
@@ -14,38 +16,14 @@ void MqttCommandRouter::begin(PubSubClient &client,
     autoMode = &autoModeRef;
     feeder = &feederRef;
     lights = &lightsRef;
-
-    // build topics from current prefix
-    tFeed = prefix + "feed";
-    tAutoMode = prefix + "auto_mode";
-    tLights = prefix + "lights";
-    tHeatBulb = prefix + "heat_bulb";
-    tUvBulb = prefix + "uv_bulb";
-    tReboot = prefix + "reboot";
-}
-
-void MqttCommandRouter::setTopicPrefix(const char *pfx)
-{
-    if (!pfx || !*pfx)
-        return;
-    prefix = pfx;
-    if (prefix.length() && prefix[prefix.length() - 1] != '/')
-        prefix += '/';
-
-    // rebuild topics
-    tFeed = prefix + "feed";
-    tAutoMode = prefix + "auto_mode";
-    tLights = prefix + "lights";
-    tHeatBulb = prefix + "heat_bulb";
-    tUvBulb = prefix + "uv_bulb";
-    tReboot = prefix + "reboot";
+    self = this;
 }
 
 void MqttCommandRouter::attach()
 {
     if (!mqtt)
         return;
-    self = this;
+
     mqtt->setCallback(&MqttCommandRouter::bridge);
 }
 
@@ -53,12 +31,15 @@ void MqttCommandRouter::subscribeAll()
 {
     if (!mqtt)
         return;
-    mqtt->subscribe(tFeed.c_str());
-    mqtt->subscribe(tAutoMode.c_str());
-    mqtt->subscribe(tLights.c_str());
-    mqtt->subscribe(tHeatBulb.c_str());
-    mqtt->subscribe(tUvBulb.c_str());
-    mqtt->subscribe(tReboot.c_str());
+    // ---- Option A: explicit list from topics.h (recommended for clarity) ----
+    for (size_t i = 0; i < SUBSCRIBE_COUNT; ++i)
+    {
+        mqtt->subscribe(SUBSCRIBE_TOPICS[i]);
+    }
+
+    // ---- Option B: wildcards (comment out A if you prefer this) ----
+    // mqtt->subscribe(TOPIC_ROOT "+/cmd");     // feeder/cmd, lights/cmd, auto_mode/cmd
+    // mqtt->subscribe(TOPIC_ROOT "+/+/cmd");   // lights/heat/cmd, lights/uv/cmd, lights/schedule/cm
 }
 
 // static
@@ -78,7 +59,7 @@ void MqttCommandRouter::handle(const char *topic, const byte *payload, unsigned 
     // Serial.printf("MQTT in [%s]: %s\n", topic, msg.c_str());
 
     //  Feed -----------------------------------------------------------
-    if (topicIs(topic, tFeed.c_str()))
+    if (topicIs(topic, TOPIC_FEEDER_CMD))
     {
         if (autoMode->isEnabled())
         {
@@ -93,14 +74,14 @@ void MqttCommandRouter::handle(const char *topic, const byte *payload, unsigned 
     }
 
     //  Auto mode on/off ----------------------------------------------
-    if (topicIs(topic, tAutoMode.c_str()))
+    if (topicIs(topic, TOPIC_AUTO_MODE_CMD))
     {
         autoMode->setEnabled(msgLower == "on");
         return;
     }
 
     // Lights on/off --------------------------------------------------
-    if (topicIs(topic, tLights.c_str()))
+    if (topicIs(topic, TOPIC_LIGHTS_CMD))
     {
         if (autoMode->isEnabled())
             return; // respect Auto Mode
@@ -116,7 +97,7 @@ void MqttCommandRouter::handle(const char *topic, const byte *payload, unsigned 
     }
 
     // heat_bulb ---------------------------------------------------------
-    if (topicIs(topic, tHeatBulb.c_str()))
+    if (topicIs(topic, TOPIC_HEAT_CMD))
     {
         if (autoMode->isEnabled())
             return;
@@ -132,7 +113,7 @@ void MqttCommandRouter::handle(const char *topic, const byte *payload, unsigned 
     }
 
     // uv_bulb -----------------------------------------------------------
-    if (topicIs(topic, tUvBulb.c_str()))
+    if (topicIs(topic, TOPIC_UV_CMD))
     {
         if (autoMode->isEnabled())
             return;
@@ -148,12 +129,35 @@ void MqttCommandRouter::handle(const char *topic, const byte *payload, unsigned 
     }
 
     // reboot ------------------------------------------------------------
-    if (topicIs(topic, tReboot.c_str()))
+    if (topicIs(topic, TOPIC_REBOOT_CMD))
     {
         if (msgLower == "1" || msgLower == "now")
         {
             delay(50);
             ESP.restart();
+        }
+        return;
+    }
+
+    if (topicIs(topic, TOPIC_LIGHTS_SCHEDULE_CMD))
+    {
+        // Payload is raw bytes from PubSubClient; parse without copying
+        JsonDocument doc;
+        DeserializationError err = deserializeJson(doc, payload, length);
+        if (!err)
+        {
+            const char *onStr = doc["on"] | "08:00";
+            const char *offStr = doc["off"] | "18:00";
+
+            auto toHHMM = [](const char *s) -> int
+            {
+                int hh = atoi(s);
+                const char *c = strchr(s, ':');
+                int mm = c ? atoi(c + 1) : 0;
+                return hh * 100 + mm;
+            };
+
+            lights->setLightTime(toHHMM(onStr), toHHMM(offStr)); // persists to NVS + republishes retained schedule
         }
         return;
     }

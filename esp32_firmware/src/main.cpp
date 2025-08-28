@@ -84,16 +84,16 @@ void setup()
   //  Setup MQTT
   mqtt.begin("172.22.80.5", 1883);
   cmdRouter.begin(mqtt.getClient(), autoMode, feeder, lights);
-  cmdRouter.setTopicPrefix("turtle/"); 
   cmdRouter.attach();
   mqtt.setOnReconnectSuccess([&]()
                              {
                                cmdRouter.subscribeAll();
                                statusPub.publishNow();
+                               lights.publishCurrentSchedule();
                                tempSensors.publishNow(); // push temps immediately on reconnect
                              });
   mqtt.reconnectIfNeeded();
-  
+
   // init oled
   initOled();
   oled.begin(display, rtc, tempSensors, feeder);

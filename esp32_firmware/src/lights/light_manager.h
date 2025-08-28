@@ -4,6 +4,7 @@
 #include <Arduino.h>
 #include <PubSubClient.h>
 #include <RTClib.h>
+#include <Preferences.h>
 
 class AutoModeManager;
 
@@ -16,6 +17,8 @@ public:
     // Called regularly to check time and apply schedule logic
     void updateSchedule(const DateTime &now);
 
+    void publishSchedule(const char *onStr, const char *offStr);
+    void publishCurrentSchedule();
     // Manual controls for both lights
     void turnOnBoth();
     void turnOffBoth();
@@ -34,8 +37,8 @@ public:
 
     // Configure the light ON and OFF times (HHMM format)
     void setLightTime(int onTimeHHMM, int offTimeHHMM);
-    int getOnTime() const { return lightOnTime; }
-    int getOffTime() const { return lightOffTime; }
+    int getOnHHMM() const { return lightOnTime; }
+    int getOffHHMM() const { return lightOffTime; }
 
 private:
     PubSubClient *client = nullptr;
@@ -48,11 +51,19 @@ private:
 
     int lightOnTime = 800;   // Default: 8:00 AM
     int lightOffTime = 1800; // Default: 6:00 PM
+    void publishState();
+
+    void loadScheduleFromNvs_();
+    void saveScheduleToNvs_() const;
+    static String hhmmToStr_(int hhmm);
+    static int clampHHMM_(int hhmm);
+
+    Preferences _prefs;
 
     bool heatIsOn = false;
     bool uvIsOn = false;
 
-    void publishState(); // MQTT publish of "turtle/lights_state"
+     // MQTT publish of "turtle/lights_state"
 };
 
 #endif

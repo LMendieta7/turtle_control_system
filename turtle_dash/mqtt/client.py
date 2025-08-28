@@ -1,5 +1,5 @@
 # mqtt_client.py
-
+import json
 import time
 import threading
 import paho.mqtt.client as mqtt
@@ -28,34 +28,65 @@ def on_message(client, userdata, msg):
 
         topic, payload = msg.topic, msg.payload.decode()
 
-        if topic == "turtle/basking_temperature":
+        if topic == "turtle/sensors/temp/basking":
             basking_sensor.update(float(payload))
             return
-        if topic == "turtle/water_temperature":
+        if topic == "turtle/sensors/temp/water":
             water_sensor.update(float(payload))
             return
 
+        # inside on_message, before the mapping:
+        if topic == "turtle/lights/schedule":
+            try:
+                data = json.loads(payload)
+                on_str  = (data.get("on")  or "07:30").strip()
+                off_str = (data.get("off") or "19:00").strip()
+                status.update_status("lights_on_str",  on_str)
+                status.update_status("lights_off_str", off_str)
+                # optional: cache duration
+                sh, sm = map(int, on_str.split(":"))
+                eh, em = map(int, off_str.split(":"))
+                mins = ((eh*60+em) - (sh*60+sm)) % (24*60)
+                status.update_status("lights_duration_min", mins)
+                status.update_status("lights_duration_str", f"{mins//60}h {mins%60}m")
+            except Exception as e:
+                print(f"[MQTT] bad schedule JSON: {e}")
+            return
+
+        # Simple mapping for everything else (new topics → existing keys)
         mapping = {
-            "turtle/lights_state":    "light_status",
-            "turtle/feeder_state":    "feeder_state",
-            "turtle/auto_mode_state": "auto_mode",
-            "turtle/feed_count":      "feed_count",
-            "turtle/esp_ip":          "esp_ip",
-            "turtle/heap":            "heap",
-            "turtle/esp_uptime_ms":   "esp_uptime_ms",
-            "turtle/esp_mqtt":          "esp_mqtt",
-            "turtle/heat_bulb/current":   "heat_bulb_current",
-            "turtle/uv_bulb/current":     "uv_bulb_current",
-            "turtle/heat_bulb/status":    "heat_bulb_status",
-            "turtle/uv_bulb/status":      "uv_bulb_status"
+            # Lights
+            "turtle/lights/status":          ("light_status", str),
+            "turtle/lights/heat/status":     ("heat_bulb_status", str),
+            "turtle/lights/uv/status":       ("uv_bulb_status", str),
+
+            # Feeder
+            "turtle/feeder/state":           ("feeder_state", str),
+            "turtle/feeder/count":           ("feed_count", int),
+
+            # Auto mode
+            "turtle/auto_mode/status":       ("auto_mode", str),
+
+            # ESP / health
+            "turtle/esp/ip":                 ("esp_ip", str),
+            "turtle/esp/heap":               ("heap", int),
+            "turtle/esp/uptime_ms":          ("esp_uptime_ms", int),
+            "turtle/esp/mqtt":               ("esp_mqtt", str),
+
+            # Currents (new paths)
+            "turtle/sensors/current/heat":   ("heat_bulb_current", float),
+            "turtle/sensors/current/uv":     ("uv_bulb_current", float),
+            "turtle/sensors/current/heat/status":   ("heat_bulb_current_status", str),
+            "turtle/sensors/current/uv/status":     ("uv_bulb_current_status", str),
         }
-        key = mapping.get(topic)
-        if key:
-            if key in ("feed_count", "esp_uptime_ms"):
-                val = int(payload)
-            elif key in ("heat_bulb_current", "uv_bulb_current"):
-                val = float(payload)
-            else:
+
+        entry = mapping.get(topic)
+        if entry:
+            key, caster = entry
+            try:
+                val = caster(payload)
+            except Exception:
+                # fall back to raw if cast fails
                 val = payload
             status.update_status(key, val)
 

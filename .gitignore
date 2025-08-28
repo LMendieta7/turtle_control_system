@@ -36,5 +36,6 @@ Thumbs.db
 .vscode/launch.json
 .vscode/ipch
 
+
 *.zip
 esp32_firmware/*.zip
