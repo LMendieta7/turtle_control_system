@@ -4,7 +4,7 @@ from dash import callback, Output, Input
 navbar = html.Div([
     dcc.Link([
         html.I(className="fa-solid fa-turtle nav-brand-icon"),
-        html.Span("Turtle SCADA", className="nav-brand-name"),
+        html.Span("Turtle Control", className="nav-brand-name"),
     ], href="/", className="nav-brand"),
     html.Div([
         dcc.Link("DASHBOARD", href="/", id="link-dashboard", className="nav-link"),

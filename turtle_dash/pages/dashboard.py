@@ -19,7 +19,7 @@ def layout():
 
         # ─── PAGE HEADER ───────────────────────────────────────────────
         html.Div([
-            html.H1("Dashboard", className="page-title"),
+            html.H1("Turtle Control", className="page-title"),
             html.P(
                 "Live conditions and habitat controls.",
                 className="dashboard-subtitle",
