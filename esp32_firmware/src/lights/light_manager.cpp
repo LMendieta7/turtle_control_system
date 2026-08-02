@@ -19,7 +19,14 @@ void LightManager::begin(PubSubClient *mqttClient, AutoModeManager *autoModeMana
     const String offS = hhmmToStr_(lightOffTime);
     publishSchedule(onS.c_str(), offS.c_str());
 
-    publishState(); // Start with known OFF state
+    // Replace any retained per-channel state left from a previous boot.
+    // The GPIOs were just initialized LOW, so OFF is the confirmed state.
+    if (client)
+    {
+        client->publish(TOPIC_HEAT_STATUS, "OFF", true);
+        client->publish(TOPIC_UV_STATUS, "OFF", true);
+    }
+    publishState();
 }
 
 void LightManager::publishCurrentSchedule()

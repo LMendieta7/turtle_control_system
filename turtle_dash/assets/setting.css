@@ -1,104 +1,347 @@
-.time-select {
+.settings-page {
+    --navy: #073b6f;
+    --blue: #1268b3;
+    --border: #dce5ed;
+    --ink: #172b3a;
+    --muted: #667987;
+    width: min(900px, calc(100% - 32px));
+    margin: 0 auto;
+    padding: 38px 0 56px;
+}
+
+.settings-header {
+    margin-bottom: 26px;
+}
+
+.settings-header h1 {
+    margin: 3px 0 6px;
+    color: var(--navy);
+    font-size: clamp(30px, 5vw, 42px);
+    line-height: 1.1;
+    text-align: left;
+}
+
+.settings-eyebrow {
+    color: var(--blue);
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.14em;
+}
+
+.settings-subtitle,
+.card-description {
+    color: var(--muted);
+}
+
+.settings-card {
+    margin-bottom: 20px;
+    padding: 26px;
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    box-shadow: 0 8px 24px rgba(29, 55, 76, 0.07);
+}
+
+.card-heading {
     display: flex;
-    align-items: bottom;
-    gap: 0.1vw;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 20px;
 }
 
-.dropdown {
-    width: 50px;
+.card-heading h2 {
+    margin: 0 0 3px;
+    color: var(--ink);
+    font-size: 21px;
 }
 
-.time-label {
-    font-weight: bold;
-    margin-top: 0.8vh;
-    text-align: center;
-    justify-content: center;
+.card-icon,
+.bulb-icon {
+    display: grid;
+    flex: 0 0 auto;
+    place-items: center;
+    border-radius: 12px;
 }
 
-.time-dropdowns {
-    display: flex;
-    gap: 8px;
+.card-icon {
+    width: 44px;
+    height: 44px;
+    font-size: 19px;
 }
 
-.time-separator {
-    font-weight: bold;
-    font-size: 20px;
-    padding: 0 4px;
-    color: #333;
+.schedule-icon {
+    color: #1769aa;
+    background: #e9f4fc;
+}
+
+.control-icon {
+    color: #b77908;
+    background: #fff4d6;
+}
+
+.current-schedule {
+    padding: 12px 14px;
+    color: #315069;
+    background: #f3f7fa;
+    border-radius: 8px;
+    font-size: 14px;
 }
 
 .time-row {
-    display: flex;
-    gap: 35px;
-    flex-wrap: wrap;
-    align-items: center;
-    margin-top: 10px;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 18px;
+    margin-top: 20px;
 }
 
-.card {
-    max-width: 760px;
-    margin: 20px auto;
-    padding: 20px;
-    background: white;
+.time-field {
+    padding: 16px;
+    background: #fbfcfd;
+    border: 1px solid var(--border);
     border-radius: 10px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
-.muted {
-    color: #666;
+.time-label {
+    display: block;
+    margin-bottom: 9px;
+    color: #405466;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.time-select {
+    display: flex;
+    align-items: center;
+}
+
+.time-dropdown {
+    flex: 1;
+    min-width: 0;
+}
+
+.time-separator {
+    padding: 0 8px;
+    color: #536776;
+    font-size: 21px;
+    font-weight: 700;
+}
+
+.schedule-summary {
+    min-height: 20px;
+    margin-top: 13px;
+    color: var(--muted);
+    font-size: 13px;
+}
+
+.card-actions {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-top: 18px;
+}
+
+.primary-btn,
+.individual-light-btn {
+    border: 0;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 700;
+    transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+}
+
+.primary-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 42px;
+    padding: 0 17px;
+    color: #fff;
+    background: var(--blue);
+}
+
+.primary-btn:hover,
+.individual-light-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 5px 14px rgba(20, 57, 84, 0.16);
+}
+
+.action-message {
+    color: #426176;
+    font-size: 13px;
 }
 
 .individual-light-grid {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 16px;
-    margin-top: 16px;
 }
 
 .individual-light-control {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 8px;
-    padding: 18px;
-    border: 1px solid #ddd;
-    border-radius: 8px;
+    padding: 22px 18px 18px;
+    background: #fbfcfd;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+}
+
+.bulb-icon {
+    width: 50px;
+    height: 50px;
+    margin-bottom: 11px;
+    font-size: 21px;
+}
+
+.heat-icon {
+    color: #d65b35;
+    background: #fff0e9;
+}
+
+.uv-icon {
+    color: #7753be;
+    background: #f0eafd;
 }
 
 .individual-light-name {
-    font-size: 18px;
-    font-weight: bold;
+    color: var(--ink);
+    font-size: 17px;
+    font-weight: 750;
 }
 
 .individual-light-state {
-    color: #555;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin: 7px 0 15px;
+    color: var(--muted);
+    font-size: 13px;
+}
+
+.state-dot {
+    width: 8px;
+    height: 8px;
+    background: #98a6b0;
+    border-radius: 50%;
+}
+
+.individual-light-state.light-on .state-dot {
+    background: #24a064;
+    box-shadow: 0 0 0 3px rgba(36, 160, 100, 0.13);
 }
 
 .individual-light-btn {
-    min-width: 110px;
-    min-height: 44px;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    font-size: 15px;
+    width: 100%;
+    min-height: 42px;
+    font-size: 14px;
 }
 
 .individual-light-btn.light-on {
-    background-color: #ffd966;
-    color: #111;
+    color: #735007;
+    background: #ffe39a;
 }
 
 .individual-light-btn.light-off {
-    background-color: #777;
-    color: white;
+    color: #fff;
+    background: #526776;
+}
+
+.light-command-message {
+    min-height: 18px;
+    margin-top: 13px;
+    text-align: center;
+}
+
+.control-note {
+    margin: 8px 0 0;
+    color: #71828e;
+    font-size: 12px;
+    text-align: center;
+}
+
+.auto-return-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+    margin-top: 20px;
+    padding: 16px;
+    background: #f3f7fa;
+    border: 1px solid #dce5ed;
+    border-radius: 10px;
+}
+
+.auto-return-label {
+    color: var(--ink);
+    font-size: 14px;
+    font-weight: 750;
+}
+
+.auto-return-description {
+    margin-top: 3px;
+    color: var(--muted);
+    font-size: 12px;
+}
+
+.auto-return-btn {
+    display: flex;
+    flex: 0 0 auto;
+    align-items: center;
+    gap: 8px;
+    min-height: 40px;
+    padding: 0 15px;
+    color: #fff;
+    background: var(--blue);
+    border: 0;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.auto-return-btn.active {
+    color: #28724d;
+    background: #dff4e8;
+    cursor: default;
+}
+
+.auto-return-message {
+    min-height: 18px;
+    margin-top: 9px;
+    text-align: right;
 }
 
 @media screen and (max-width: 600px) {
-    .card {
-        margin: 14px 12px;
+    .settings-page {
+        width: min(100% - 24px, 900px);
+        padding-top: 24px;
     }
 
+    .settings-card {
+        padding: 20px 16px;
+    }
+
+    .time-row,
     .individual-light-grid {
         grid-template-columns: 1fr;
+    }
+
+    .card-actions {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .auto-return-row {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .auto-return-btn {
+        justify-content: center;
+        width: 100%;
+    }
+
+    .auto-return-message {
+        text-align: left;
     }
 }

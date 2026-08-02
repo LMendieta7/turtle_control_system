@@ -1,6 +1,6 @@
 # pages/settings.py
 import dash
-from dash import html, dcc, Input, Output, State, no_update
+from dash import html, dcc, Input, Output, State, no_update, ctx
 import json
 from mqtt.status_manager import status
 from mqtt.client import mqtt_client
@@ -47,51 +47,85 @@ def layout():
     hour_opts   = [{"label": f"{h:02d}", "value": f"{h:02d}"} for h in range(24)]
     minute_opts = [{"label": f"{m:02d}", "value": f"{m:02d}"} for m in range(0, 60, 5)]
 
-    return html.Div([
-        html.H1("Tank Controls"),
+    return html.Main([
+        html.Div([
+            html.Div("TURTLE HABITAT", className="settings-eyebrow"),
+            html.H1("Tank Controls"),
+            html.P(
+                "Manage lighting and the daily schedule from one place.",
+                className="settings-subtitle",
+            ),
+        ], className="settings-header"),
 
         html.Div([
-            html.H3("Light Schedule"),
+            html.Div([
+                html.Div([
+                    html.I(className="fa-regular fa-clock"),
+                ], className="card-icon schedule-icon"),
+                html.Div([
+                    html.H2("Light Schedule"),
+                    html.P("Set when both lights run in automatic mode.", className="card-description"),
+                ]),
+            ], className="card-heading"),
 
             # Current (live) schedule from ESP + duration
-            html.Div(id="current-light-schedule", className="muted", style={"marginBottom": 8}),
+            html.Div(id="current-light-schedule", className="current-schedule"),
             dcc.Interval(id="sched-poll", interval=2000, n_intervals=0),
 
             html.Div([
                 # Start
                 html.Div([
-                    html.Label("Start Time:"),
-                    dcc.Dropdown(id="light-start-hour",   options=hour_opts,   value=on_hh,  clearable=False, className="dropdown"),
-                    html.Span(":", className="time-separator"),
-                    dcc.Dropdown(id="light-start-minute", options=minute_opts, value=on_mm,  clearable=False, className="dropdown"),
-                ], className="time-select"),
+                    html.Label("Lights on", className="time-label"),
+                    html.Div([
+                        dcc.Dropdown(id="light-start-hour", options=hour_opts, value=on_hh, clearable=False, className="time-dropdown"),
+                        html.Span(":", className="time-separator"),
+                        dcc.Dropdown(id="light-start-minute", options=minute_opts, value=on_mm, clearable=False, className="time-dropdown"),
+                    ], className="time-select"),
+                ], className="time-field"),
 
                 # End
                 html.Div([
-                    html.Label("End Time:"),
-                    dcc.Dropdown(id="light-end-hour",     options=hour_opts,   value=off_hh, clearable=False, className="dropdown"),
-                    html.Span(":", className="time-separator"),
-                    dcc.Dropdown(id="light-end-minute",   options=minute_opts, value=off_mm, clearable=False, className="dropdown"),
-                ], className="time-select"),
+                    html.Label("Lights off", className="time-label"),
+                    html.Div([
+                        dcc.Dropdown(id="light-end-hour", options=hour_opts, value=off_hh, clearable=False, className="time-dropdown"),
+                        html.Span(":", className="time-separator"),
+                        dcc.Dropdown(id="light-end-minute", options=minute_opts, value=off_mm, clearable=False, className="time-dropdown"),
+                    ], className="time-select"),
+                ], className="time-field"),
             ], className="time-row"),
 
             # Live summary of selected interval
-            html.Div(id="selected-interval-summary", className="muted", style={"marginTop": 8}),
+            html.Div(id="selected-interval-summary", className="schedule-summary"),
 
-            html.Button("Save Schedule", id="save-light-schedule", n_clicks=0, className="btn"),
-            html.Div(id="schedule-save-status", className="muted", style={"marginTop": 8}),
-        ], className="card"),
+            html.Div([
+                html.Button([
+                    html.I(className="fa-regular fa-floppy-disk"),
+                    html.Span("Save schedule"),
+                ], id="save-light-schedule", n_clicks=0, className="primary-btn"),
+                html.Div(id="schedule-save-status", className="action-message"),
+            ], className="card-actions"),
+        ], className="settings-card"),
 
         html.Div([
-            html.H3("Individual Light Control"),
-            html.P(
-                "Control each bulb separately. Bulb states refresh automatically.",
-                className="muted",
-            ),
             html.Div([
                 html.Div([
+                    html.I(className="fa-regular fa-lightbulb"),
+                ], className="card-icon control-icon"),
+                html.Div([
+                    html.H2("Individual Lights"),
+                    html.P("Manual control for each habitat bulb.", className="card-description"),
+                ]),
+            ], className="card-heading"),
+            html.Div([
+                html.Div([
+                    html.Div([
+                        html.I(className="fa-solid fa-fire-flame-curved"),
+                    ], className="bulb-icon heat-icon"),
                     html.Div("Heat Bulb", className="individual-light-name"),
-                    html.Div(id="heat-light-state", className="individual-light-state"),
+                    html.Div([
+                        html.Span(className="state-dot"),
+                        html.Span(id="heat-light-state"),
+                    ], id="heat-light-status", className="individual-light-state"),
                     html.Button(
                         id="heat-light-btn",
                         n_clicks=0,
@@ -99,8 +133,14 @@ def layout():
                     ),
                 ], className="individual-light-control"),
                 html.Div([
+                    html.Div([
+                        html.I(className="fa-solid fa-sun"),
+                    ], className="bulb-icon uv-icon"),
                     html.Div("UV Bulb", className="individual-light-name"),
-                    html.Div(id="uv-light-state", className="individual-light-state"),
+                    html.Div([
+                        html.Span(className="state-dot"),
+                        html.Span(id="uv-light-state"),
+                    ], id="uv-light-status", className="individual-light-state"),
                     html.Button(
                         id="uv-light-btn",
                         n_clicks=0,
@@ -108,8 +148,30 @@ def layout():
                     ),
                 ], className="individual-light-control"),
             ], className="individual-light-grid"),
-        ], className="card"),
-    ])
+            html.Div(id="light-command-status", className="action-message light-command-message"),
+            html.P([
+                html.I(className="fa-solid fa-circle-info"),
+                html.Span(" Using a manual control turns off Auto Mode so the command can run."),
+            ], className="control-note"),
+            html.Div([
+                html.Div([
+                    html.Div("Schedule control", className="auto-return-label"),
+                    html.Div(
+                        "Return both lights to the saved automatic schedule.",
+                        className="auto-return-description",
+                    ),
+                ]),
+                html.Button([
+                    html.I(className="fa-solid fa-rotate"),
+                    html.Span(id="return-auto-mode-label"),
+                ], id="return-auto-mode-btn", n_clicks=0, className="auto-return-btn"),
+            ], className="auto-return-row"),
+            html.Div(
+                id="auto-mode-return-status",
+                className="action-message auto-return-message",
+            ),
+        ], className="settings-card"),
+    ], className="settings-page")
 
 # ---------- callbacks ----------
 
@@ -174,11 +236,17 @@ def _render_individual_light(value):
     state = "On" if is_on else "Off"
     action = "Turn Off" if is_on else "Turn On"
     css_class = "light-on" if is_on else "light-off"
-    return state, action, f"individual-light-btn {css_class}"
+    return (
+        state,
+        f"individual-light-state {css_class}",
+        action,
+        f"individual-light-btn {css_class}",
+    )
 
 
 @dash.callback(
     Output("heat-light-state", "children"),
+    Output("heat-light-status", "className"),
     Output("heat-light-btn", "children"),
     Output("heat-light-btn", "className"),
     Input("sched-poll", "n_intervals"),
@@ -191,6 +259,7 @@ def render_heat_light(_):
 
 @dash.callback(
     Output("uv-light-state", "children"),
+    Output("uv-light-status", "className"),
     Output("uv-light-btn", "children"),
     Output("uv-light-btn", "className"),
     Input("sched-poll", "n_intervals"),
@@ -204,25 +273,66 @@ def render_uv_light(_):
 def _toggle_individual_light(status_key, command_topic):
     current = _normalize_light_state(status.get_status(status_key, default="OFF"))
     new_state = "OFF" if current == "ON" else "ON"
+
+    auto_was_on = str(status.get_status("auto_mode", default="off")).lower() == "on"
+    if auto_was_on:
+        # The ESP rejects manual light commands in Auto Mode. MQTT preserves
+        # publish order on this connection, so disable Auto Mode first.
+        mqtt_client.publish("turtle/auto_mode/cmd", "off")
+        status.update_status("auto_mode", "off")
+
     mqtt_client.publish(command_topic, new_state)
     status.update_status(status_key, new_state)
+    return new_state, auto_was_on
 
 
 @dash.callback(
-    Output("heat-light-btn", "n_clicks"),
+    Output("light-command-status", "children"),
     Input("heat-light-btn", "n_clicks"),
-    prevent_initial_call=True,
-)
-def toggle_heat_light(_):
-    _toggle_individual_light("heat_bulb_status", "turtle/lights/heat/cmd")
-    return 0
-
-
-@dash.callback(
-    Output("uv-light-btn", "n_clicks"),
     Input("uv-light-btn", "n_clicks"),
     prevent_initial_call=True,
 )
-def toggle_uv_light(_):
-    _toggle_individual_light("uv_bulb_status", "turtle/lights/uv/cmd")
-    return 0
+def toggle_individual_light(_, __):
+    light_id = ctx.triggered_id
+    if light_id == "heat-light-btn":
+        label, key, topic = "Heat bulb", "heat_bulb_status", "turtle/lights/heat/cmd"
+    elif light_id == "uv-light-btn":
+        label, key, topic = "UV bulb", "uv_bulb_status", "turtle/lights/uv/cmd"
+    else:
+        return no_update
+
+    try:
+        new_state, auto_was_on = _toggle_individual_light(key, topic)
+        mode_message = " Auto Mode was turned off." if auto_was_on else ""
+        return f"{label} command sent: {new_state.title()}.{mode_message}"
+    except Exception as exc:
+        return f"Could not control {label.lower()}: {exc}"
+
+
+@dash.callback(
+    Output("return-auto-mode-label", "children"),
+    Output("return-auto-mode-btn", "disabled"),
+    Output("return-auto-mode-btn", "className"),
+    Input("sched-poll", "n_intervals"),
+)
+def render_return_to_auto_mode(_):
+    auto_is_on = (
+        str(status.get_status("auto_mode", default="off")).strip().lower() == "on"
+    )
+    if auto_is_on:
+        return "Auto Mode Active", True, "auto-return-btn active"
+    return "Return to Auto Mode", False, "auto-return-btn"
+
+
+@dash.callback(
+    Output("auto-mode-return-status", "children"),
+    Input("return-auto-mode-btn", "n_clicks"),
+    prevent_initial_call=True,
+)
+def return_to_auto_mode(_):
+    try:
+        mqtt_client.publish("turtle/auto_mode/cmd", "on")
+        status.update_status("auto_mode", "on")
+        return "Auto Mode enabled. The saved light schedule is now in control."
+    except Exception as exc:
+        return f"Could not enable Auto Mode: {exc}"
