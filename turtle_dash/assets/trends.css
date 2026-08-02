@@ -1,0 +1,108 @@
+.trends-page {
+    width: min(1080px, calc(100% - 32px));
+    margin: 0 auto;
+    padding: 38px 0 56px;
+}
+
+.trends-header {
+    margin-bottom: 22px;
+    text-align: center;
+}
+
+.trends-header h1 {
+    margin: 0 0 6px;
+    color: #073b6f;
+    font-size: clamp(32px, 5vw, 44px);
+}
+
+.trends-header p,
+.trend-card-heading p,
+.feeding-history-note {
+    color: #667987;
+}
+
+.trends-header p,
+.trend-card-heading p {
+    margin: 0;
+}
+
+.trend-stats {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 14px;
+    margin-bottom: 20px;
+}
+
+.trend-stat,
+.trend-card {
+    background: #fff;
+    border: 1px solid #dce5ed;
+    border-radius: 14px;
+    box-shadow: 0 8px 24px rgba(29, 55, 76, 0.07);
+}
+
+.trend-stat {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    gap: 5px;
+    padding: 16px 18px;
+}
+
+.trend-stat-label {
+    color: #667987;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.trend-stat-value {
+    overflow: hidden;
+    color: #172b3a;
+    font-size: 22px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.trend-card {
+    margin-top: 20px;
+    padding: 22px;
+}
+
+.trend-card-heading h2 {
+    margin: 0 0 4px;
+    color: #172b3a;
+    font-size: 20px;
+}
+
+.feeding-history-note {
+    margin: 4px 0 0;
+    font-size: 11px;
+}
+
+@media screen and (max-width: 700px) {
+    .trends-page {
+        width: min(100% - 24px, 1080px);
+        padding-top: 24px;
+    }
+
+    .trend-stats {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+    }
+
+    .trend-stat {
+        padding: 13px;
+    }
+
+    .trend-stat-value {
+        font-size: 18px;
+    }
+
+    .trend-card {
+        padding: 16px 10px;
+    }
+
+    .trend-card-heading {
+        padding: 0 6px;
+    }
+}

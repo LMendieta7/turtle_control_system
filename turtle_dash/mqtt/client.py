@@ -2,15 +2,18 @@
 import json
 import time
 import threading
+from datetime import datetime
 import paho.mqtt.client as mqtt
 from mqtt.sensors import Sensor
 from mqtt.status_manager import status
 from mqtt.topics import TOPICS
+from services.database import Database
 
 # ————————————————————————————————
 # 1) Your sensors and status manager
 basking_sensor = Sensor("Basking", default=0, valid_range=(40, 130))
 water_sensor  = Sensor("Water",  default=0, valid_range=(40, 130))
+feeding_db = Database()
 
 # ————————————————————————————————
 # 2) MQTT callbacks
@@ -33,6 +36,19 @@ def on_message(client, userdata, msg):
             return
         if topic == "turtle/sensors/temp/water":
             water_sensor.update(float(payload))
+            return
+
+        if topic == "turtle/feeder/state":
+            previous_state = status.get_status("feeder_state", default="IDLE")
+            feeder_state = payload.strip().upper()
+            status.update_status("feeder_state", feeder_state)
+            if feeder_state == "RUNNING" and previous_state != "RUNNING":
+                auto_mode = status.get_status("auto_mode", default="off")
+                feeding_source = "automatic" if auto_mode == "on" else "manual"
+                feeding_db.insert_feeding_event(
+                    datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                    source=feeding_source,
+                )
             return
 
         # inside on_message, before the mapping:
@@ -61,7 +77,6 @@ def on_message(client, userdata, msg):
             "turtle/lights/uv/status":       ("uv_bulb_status", str),
 
             # Feeder
-            "turtle/feeder/state":           ("feeder_state", str),
             "turtle/feeder/count":           ("feed_count", int),
 
             # Auto mode
