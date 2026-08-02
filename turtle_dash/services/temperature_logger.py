@@ -2,7 +2,7 @@ import threading
 import time
 from datetime import datetime
 from mqtt.client import basking_sensor, water_sensor
-from services.db.database import Database
+from services.database import Database
 
 db = Database()
 

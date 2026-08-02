@@ -1,17 +1,8 @@
-from services.monitoring import start_all_monitors
-import dash 
+import dash
 from dash import dcc, html
+
 from components.navbar import navbar
-from services.db.database import Database
-import time
-from mqtt.client import start_mqtt          # To connect and run MQTT in background
-
-Database()
-start_mqtt()
-time.sleep(1)
-start_all_monitors()
-
-# Initialize the database (creates table if needed)
+from services.monitoring import start_background_services
 
 external_stylesheets = [
     "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
@@ -26,6 +17,8 @@ app.layout = html.Div([
     dash.page_container
 ])
 
+start_background_services()
 
-if __name__ == '__main__':
-    app.run(debug =True, host='0.0.0.0', port=8050)
+
+if __name__ == "__main__":
+    app.run(debug=True, host="0.0.0.0", port=8050)

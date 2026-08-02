@@ -1,10 +1,9 @@
 import dash
-from dash import html
 from dash import dcc, html, callback, Input, Output
 import plotly.graph_objects as go
 import pandas as pd
-import sqlite3
-from datetime import datetime
+
+from services.database import Database
 
 dash.register_page(__name__, path="/trends", name="Temperatures")
 
@@ -22,13 +21,10 @@ layout = html.Div([
 )
 def update_trends(n):
     try:
-        # Connect and load today's data
-        conn = sqlite3.connect("turtle.db")
-        df = pd.read_sql_query(
-            "SELECT * FROM temperature_log WHERE DATE(timestamp) = DATE('now', 'localtime')",
-            conn
+        df = pd.DataFrame(
+            Database().get_todays_temperatures(),
+            columns=["id", "timestamp", "basking_temp", "water_temp"],
         )
-        conn.close()
 
         if df.empty:
             fig = go.Figure()

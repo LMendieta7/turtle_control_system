@@ -4,7 +4,7 @@ import time
 import threading
 import paho.mqtt.client as mqtt
 from mqtt.sensors import Sensor
-from mqtt.status_manager import status, StatusManager
+from mqtt.status_manager import status
 from mqtt.topics import TOPICS
 
 # ————————————————————————————————
@@ -125,4 +125,3 @@ def start_mqtt():
                 time.sleep(5)
 
     threading.Thread(target=_connect, daemon=True).start()
-
