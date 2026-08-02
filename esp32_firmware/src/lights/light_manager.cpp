@@ -19,7 +19,6 @@ void LightManager::begin(PubSubClient *mqttClient, AutoModeManager *autoModeMana
     const String offS = hhmmToStr_(lightOffTime);
     publishSchedule(onS.c_str(), offS.c_str());
 
-    lightsAreOn = false;
     publishState(); // Start with known OFF state
 }
 
@@ -38,75 +37,91 @@ void LightManager::updateSchedule(const DateTime &now)
 
     int currentTime = now.hour() * 100 + now.minute();
 
-    if (currentTime >= lightOnTime && currentTime < lightOffTime)
+    const bool crossesMidnight = lightOnTime > lightOffTime;
+    const bool shouldBeOn = crossesMidnight
+                                ? currentTime >= lightOnTime || currentTime < lightOffTime
+                                : currentTime >= lightOnTime && currentTime < lightOffTime;
+
+    if (shouldBeOn)
     {
-        turnOnBoth(); // auto logic
+        turnOnBoth();
     }
     else
     {
-        turnOffBoth(); // auto logic
+        turnOffBoth();
     }
 }
 
 void LightManager::turnOnBoth()
 {
-
     heatOn();
     uvOn();
-    lightsAreOn = true;
-    publishState();
 }
 
 void LightManager::turnOffBoth()
 {
-
     heatOff();
     uvOff();
-    lightsAreOn = false;
-    publishState();
 }
 
 void LightManager::heatOn()
 {
+    if (heatIsOn)
+        return;
+
     digitalWrite(BASKING_LIGHT_PIN, HIGH);
     heatIsOn = true;
-    client->publish(TOPIC_HEAT_STATUS, "ON", true);
+    if (client)
+        client->publish(TOPIC_HEAT_STATUS, "ON", true);
+    publishState();
 }
 
 void LightManager::heatOff()
 {
+    if (!heatIsOn)
+        return;
 
     digitalWrite(BASKING_LIGHT_PIN, LOW);
     heatIsOn = false;
-    client->publish(TOPIC_HEAT_STATUS, "OFF", true);
+    if (client)
+        client->publish(TOPIC_HEAT_STATUS, "OFF", true);
+    publishState();
 }
 
 void LightManager::uvOn()
 {
+    if (uvIsOn)
+        return;
 
     digitalWrite(UV_LIGHT_PIN, HIGH);
     uvIsOn = true;
-    client->publish(TOPIC_UV_STATUS, "ON", true);
+    if (client)
+        client->publish(TOPIC_UV_STATUS, "ON", true);
+    publishState();
 }
 
 void LightManager::uvOff()
 {
+    if (!uvIsOn)
+        return;
 
     digitalWrite(UV_LIGHT_PIN, LOW);
     uvIsOn = false;
-    client->publish(TOPIC_UV_STATUS, "OFF", true);
+    if (client)
+        client->publish(TOPIC_UV_STATUS, "OFF", true);
+    publishState();
 }
 
 bool LightManager::isOn() const
 {
-    return lightsAreOn;
+    return heatIsOn || uvIsOn;
 }
 
 void LightManager::publishState()
 {
     if (!client)
         return;
-    const char *state = lightsAreOn ? "ON" : "OFF";
+    const char *state = isOn() ? "ON" : "OFF";
     client->publish(TOPIC_LIGHTS_STATUS, state, true);
 }
 

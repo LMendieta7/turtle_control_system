@@ -76,7 +76,10 @@ void MqttCommandRouter::handle(const char *topic, const byte *payload, unsigned 
     //  Auto mode on/off ----------------------------------------------
     if (topicIs(topic, TOPIC_AUTO_MODE_CMD))
     {
-        autoMode->setEnabled(msgLower == "on");
+        if (msgLower == "on")
+            autoMode->setEnabled(true);
+        else if (msgLower == "off")
+            autoMode->setEnabled(false);
         return;
     }
 

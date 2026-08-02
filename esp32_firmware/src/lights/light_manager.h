@@ -44,8 +44,6 @@ private:
     PubSubClient *client = nullptr;
     AutoModeManager *autoMode = nullptr;
 
-    bool lightsAreOn = false;
-
     static constexpr int BASKING_LIGHT_PIN = 1;
     static constexpr int UV_LIGHT_PIN = 2;
 
@@ -62,8 +60,6 @@ private:
 
     bool heatIsOn = false;
     bool uvIsOn = false;
-
-     // MQTT publish of "turtle/lights_state"
 };
 
 #endif

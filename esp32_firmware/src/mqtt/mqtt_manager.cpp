@@ -4,6 +4,7 @@
 void MqttManager::begin(const char *server, int port)
 {
     client.setServer(server, port);
+    lastReconnectAttempt = millis() - reconnectInterval;
 }
 
 void MqttManager::setCallback(MQTT_CALLBACK_SIGNATURE)
@@ -46,8 +47,6 @@ void MqttManager::reconnectIfNeeded()
             Serial.print(client.state());
             Serial.println(" — will retry");
         }
-
-        delay(5); // short delay to avoid spam
     }
 }
 
