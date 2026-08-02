@@ -14,8 +14,24 @@ GRAPH_CONFIG = {"displayModeBar": False, "responsive": True}
 
 layout = html.Main([
     html.Div([
-        html.H1("Habitat Trends"),
-        html.P("Temperature history and feeding consistency over the last seven days."),
+        html.Div([
+            html.H1("Habitat Trends"),
+            html.P("Temperatures and feeding history."),
+        ]),
+        html.Div([
+            html.Label("Time range", htmlFor="trends-range"),
+            dcc.Dropdown(
+                id="trends-range",
+                options=[
+                    {"label": "7 days", "value": 7},
+                    {"label": "14 days", "value": 14},
+                    {"label": "30 days", "value": 30},
+                ],
+                value=7,
+                clearable=False,
+                searchable=False,
+            ),
+        ], className="trends-range-control"),
     ], className="trends-header"),
 
     html.Div([
@@ -40,7 +56,7 @@ layout = html.Main([
     html.Section([
         html.Div([
             html.H2("Temperature history"),
-            html.P("Basking and water readings from the last seven days."),
+            html.P("Basking and water temperatures."),
         ], className="trend-card-heading"),
         dcc.Graph(id="temperature-trends-graph", config=GRAPH_CONFIG),
     ], className="trend-card"),
@@ -48,11 +64,11 @@ layout = html.Main([
     html.Section([
         html.Div([
             html.H2("Feeding history"),
-            html.P("Daily feeding events. Red bars identify days with no recorded feeding."),
+            html.P("Daily feedings; red means none."),
         ], className="trend-card-heading"),
         dcc.Graph(id="feeding-trends-graph", config=GRAPH_CONFIG),
         html.P(
-            "Feeding history begins after this update and is recorded when the controller reports that the feeder is running.",
+            "History starts with this update.",
             className="feeding-history-note",
         ),
     ], className="trend-card"),
@@ -90,22 +106,24 @@ def empty_figure(message, y_title):
     Output("temperature-trends-graph", "figure"),
     Output("feeding-trends-graph", "figure"),
     Input("trends-interval", "n_intervals"),
+    Input("trends-range", "value"),
 )
-def update_trends(_):
+def update_trends(_, selected_days):
+    range_days = int(selected_days) if selected_days in (7, 14, 30) else 7
     database = Database()
     temperature_df = pd.DataFrame(
-        database.get_recent_temperatures(7),
+        database.get_recent_temperatures(range_days),
         columns=["id", "timestamp", "basking_temp", "water_temp"],
     )
     feeding_df = pd.DataFrame(
-        database.get_recent_feeding_events(30),
+        database.get_recent_feeding_events(3650),
         columns=["id", "timestamp", "source"],
     )
 
     latest_basking = "No data"
     latest_water = "No data"
     temperature_figure = empty_figure(
-        "No temperature readings recorded in the last seven days.",
+        f"No temperature readings in the last {range_days} days.",
         "Temperature (°F)",
     )
 
@@ -147,8 +165,11 @@ def update_trends(_):
         )
 
     today = datetime.now().date()
-    last_seven_days = [today - timedelta(days=offset) for offset in range(6, -1, -1)]
-    daily_counts = {day: 0 for day in last_seven_days}
+    displayed_days = [
+        today - timedelta(days=offset)
+        for offset in range(range_days - 1, -1, -1)
+    ]
+    daily_counts = {day: 0 for day in displayed_days}
     last_feeding = "No history yet"
     missed_days_display = "No history"
 
@@ -168,10 +189,10 @@ def update_trends(_):
             if feeding_day in daily_counts:
                 daily_counts[feeding_day] += 1
         missed_days = sum(count == 0 for count in daily_counts.values())
-        missed_days_display = f"{missed_days} of 7"
+        missed_days_display = f"{missed_days} of {range_days}"
 
     feeding_figure = go.Figure(go.Bar(
-        x=[day.strftime("%a<br>%b %-d") for day in last_seven_days],
+        x=[day.strftime("%a<br>%b %-d") for day in displayed_days],
         y=list(daily_counts.values()),
         marker_color=[
             "#d95b5b" if count == 0 else "#2f8f5b"
@@ -187,7 +208,7 @@ def update_trends(_):
         paper_bgcolor="rgba(0,0,0,0)",
         plot_bgcolor="rgba(0,0,0,0)",
         showlegend=False,
-        xaxis={"title": None, "gridcolor": "#edf1f4"},
+        xaxis={"title": None, "gridcolor": "#edf1f4", "tickangle": -30 if range_days > 14 else 0},
         yaxis={"title": "Feedings", "dtick": 1, "rangemode": "tozero", "gridcolor": "#edf1f4"},
     )
 

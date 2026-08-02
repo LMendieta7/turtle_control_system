@@ -11,6 +11,7 @@
 
 .settings-header {
     margin-bottom: 26px;
+    text-align: center;
 }
 
 .settings-header h1 {
@@ -18,7 +19,7 @@
     color: var(--navy);
     font-size: clamp(30px, 5vw, 42px);
     line-height: 1.1;
-    text-align: left;
+    text-align: center;
 }
 
 .settings-subtitle,
@@ -95,16 +96,31 @@
 }
 
 .time-label {
-    display: block;
-    margin-bottom: 9px;
+    margin: 0;
     color: #405466;
     font-size: 13px;
     font-weight: 700;
 }
 
+.time-field-heading {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    margin-bottom: 11px;
+}
+
+.lights-on-heading i {
+    color: #d79016;
+}
+
+.lights-off-heading i {
+    color: #526b9c;
+}
+
 .time-select {
     display: flex;
     align-items: center;
+    gap: 8px;
 }
 
 .time-dropdown {
@@ -113,10 +129,15 @@
 }
 
 .time-separator {
-    padding: 0 8px;
+    padding: 0;
     color: #536776;
     font-size: 21px;
     font-weight: 700;
+}
+
+.period-dropdown {
+    flex: 0 0 84px;
+    min-width: 0;
 }
 
 .schedule-summary {

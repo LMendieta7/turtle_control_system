@@ -5,8 +5,11 @@
 }
 
 .trends-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: end;
+    gap: 20px;
     margin-bottom: 22px;
-    text-align: center;
 }
 
 .trends-header h1 {
@@ -24,6 +27,19 @@
 .trends-header p,
 .trend-card-heading p {
     margin: 0;
+}
+
+.trends-range-control {
+    flex: 0 0 130px;
+    text-align: left;
+}
+
+.trends-range-control label {
+    display: block;
+    margin-bottom: 5px;
+    color: #667987;
+    font-size: 11px;
+    font-weight: 700;
 }
 
 .trend-stats {
@@ -88,6 +104,17 @@
     .trend-stats {
         grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 10px;
+    }
+
+    .trends-header {
+        align-items: stretch;
+        flex-direction: column;
+        gap: 14px;
+    }
+
+    .trends-range-control {
+        flex-basis: auto;
+        width: 140px;
     }
 
     .trend-stat {
