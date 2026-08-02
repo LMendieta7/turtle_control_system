@@ -81,6 +81,34 @@ def layout():
             html.Button("Save Schedule", id="save-light-schedule", n_clicks=0, className="btn"),
             html.Div(id="schedule-save-status", className="muted", style={"marginTop": 8}),
         ], className="card"),
+
+        html.Div([
+            html.H3("Individual Light Control"),
+            html.P(
+                "Control each bulb separately. Bulb states refresh automatically.",
+                className="muted",
+            ),
+            html.Div([
+                html.Div([
+                    html.Div("Heat Bulb", className="individual-light-name"),
+                    html.Div(id="heat-light-state", className="individual-light-state"),
+                    html.Button(
+                        id="heat-light-btn",
+                        n_clicks=0,
+                        className="individual-light-btn light-off",
+                    ),
+                ], className="individual-light-control"),
+                html.Div([
+                    html.Div("UV Bulb", className="individual-light-name"),
+                    html.Div(id="uv-light-state", className="individual-light-state"),
+                    html.Button(
+                        id="uv-light-btn",
+                        n_clicks=0,
+                        className="individual-light-btn light-off",
+                    ),
+                ], className="individual-light-control"),
+            ], className="individual-light-grid"),
+        ], className="card"),
     ])
 
 # ---------- callbacks ----------
@@ -135,3 +163,66 @@ def save_schedule(n, sh, sm, eh, em):
         return f"Saved: {on} → {off} • total {_fmt_duration(mins)}"
     except Exception as e:
         return f"Error: {e}"
+
+
+def _normalize_light_state(value):
+    return str(value or "OFF").strip().upper()
+
+
+def _render_individual_light(value):
+    is_on = _normalize_light_state(value) == "ON"
+    state = "On" if is_on else "Off"
+    action = "Turn Off" if is_on else "Turn On"
+    css_class = "light-on" if is_on else "light-off"
+    return state, action, f"individual-light-btn {css_class}"
+
+
+@dash.callback(
+    Output("heat-light-state", "children"),
+    Output("heat-light-btn", "children"),
+    Output("heat-light-btn", "className"),
+    Input("sched-poll", "n_intervals"),
+)
+def render_heat_light(_):
+    return _render_individual_light(
+        status.get_status("heat_bulb_status", default="OFF")
+    )
+
+
+@dash.callback(
+    Output("uv-light-state", "children"),
+    Output("uv-light-btn", "children"),
+    Output("uv-light-btn", "className"),
+    Input("sched-poll", "n_intervals"),
+)
+def render_uv_light(_):
+    return _render_individual_light(
+        status.get_status("uv_bulb_status", default="OFF")
+    )
+
+
+def _toggle_individual_light(status_key, command_topic):
+    current = _normalize_light_state(status.get_status(status_key, default="OFF"))
+    new_state = "OFF" if current == "ON" else "ON"
+    mqtt_client.publish(command_topic, new_state)
+    status.update_status(status_key, new_state)
+
+
+@dash.callback(
+    Output("heat-light-btn", "n_clicks"),
+    Input("heat-light-btn", "n_clicks"),
+    prevent_initial_call=True,
+)
+def toggle_heat_light(_):
+    _toggle_individual_light("heat_bulb_status", "turtle/lights/heat/cmd")
+    return 0
+
+
+@dash.callback(
+    Output("uv-light-btn", "n_clicks"),
+    Input("uv-light-btn", "n_clicks"),
+    prevent_initial_call=True,
+)
+def toggle_uv_light(_):
+    _toggle_individual_light("uv_bulb_status", "turtle/lights/uv/cmd")
+    return 0

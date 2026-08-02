@@ -35,3 +35,70 @@
     margin-top: 10px;
 }
 
+.card {
+    max-width: 760px;
+    margin: 20px auto;
+    padding: 20px;
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.muted {
+    color: #666;
+}
+
+.individual-light-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+    margin-top: 16px;
+}
+
+.individual-light-control {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 18px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+}
+
+.individual-light-name {
+    font-size: 18px;
+    font-weight: bold;
+}
+
+.individual-light-state {
+    color: #555;
+}
+
+.individual-light-btn {
+    min-width: 110px;
+    min-height: 44px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 15px;
+}
+
+.individual-light-btn.light-on {
+    background-color: #ffd966;
+    color: #111;
+}
+
+.individual-light-btn.light-off {
+    background-color: #777;
+    color: white;
+}
+
+@media screen and (max-width: 600px) {
+    .card {
+        margin: 14px 12px;
+    }
+
+    .individual-light-grid {
+        grid-template-columns: 1fr;
+    }
+}
