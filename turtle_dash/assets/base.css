@@ -30,10 +30,14 @@ body {
 }
 
 .dashboard-header {
+    display: flex;
+    width: 100%;
+    justify-content: center;
     margin-bottom: 26px;
 }
 
 .dashboard-header .page-title {
+    width: 100%;
     margin: 3px 0;
     color: var(--navy);
     font-size: clamp(32px, 5vw, 44px);
@@ -90,7 +94,7 @@ body {
 
 /* ─── System status ───────────────────────────────────────────────────── */
 .status-card {
-    padding: 20px;
+    padding: 16px 18px;
 }
 
 .status-icon {
@@ -98,22 +102,28 @@ body {
     background: #e4f5eb;
 }
 
+.status-card .section-icon {
+    width: 36px;
+    height: 36px;
+    font-size: 15px;
+}
+
 #status-container {
-    margin-top: 16px;
+    margin-top: 12px;
 }
 
 .status-bar {
     display: grid;
     grid-template-columns: repeat(7, minmax(0, 1fr));
-    gap: 7px;
+    gap: 6px;
 }
 
 .status-item {
     display: flex;
     min-width: 0;
     align-items: center;
-    gap: 7px;
-    padding: 8px 9px;
+    gap: 6px;
+    padding: 5px 7px;
     background: #f6f8fa;
     border: 1px solid #e7edf1;
     border-radius: 8px;
