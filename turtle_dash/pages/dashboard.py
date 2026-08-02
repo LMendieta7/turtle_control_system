@@ -20,10 +20,6 @@ def layout():
         # ─── PAGE HEADER ───────────────────────────────────────────────
         html.Div([
             html.H1("Turtle Control", className="page-title"),
-            html.P(
-                "Live conditions and habitat controls.",
-                className="dashboard-subtitle",
-            ),
         ], className="dashboard-header"),
 
         # ─── SYSTEM STATUS ─────────────────────────────────────────────
@@ -56,7 +52,7 @@ def layout():
                 ], id="basking-gauge", className="radial-gauge basking-gauge"),
                 html.Div([
                     html.Span("45°F"),
-                    html.Span("105°F"),
+                    html.Span("120°F"),
                 ], className="gauge-range"),
             ], className="dashboard-card metric-card"),
             html.Section([
@@ -75,7 +71,7 @@ def layout():
                 ], id="water-gauge", className="radial-gauge water-gauge"),
                 html.Div([
                     html.Span("45°F"),
-                    html.Span("105°F"),
+                    html.Span("120°F"),
                 ], className="gauge-range"),
             ], className="dashboard-card metric-card"),
         ], id="gauge-container"),
@@ -273,7 +269,7 @@ def update_gauges(n):
         except (TypeError, ValueError):
             numeric_value = 0.0
 
-        percent = max(0.0, min(100.0, (numeric_value - 45.0) / 60.0 * 100.0))
+        percent = max(0.0, min(100.0, (numeric_value - 45.0) / 75.0 * 100.0))
         style = {"--gauge-fill": f"{percent * 1.8:.1f}deg"}
         css_class = f"radial-gauge {gauge_type}-gauge"
         if stale:

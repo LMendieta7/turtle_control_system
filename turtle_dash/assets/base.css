@@ -34,11 +34,11 @@ body {
 }
 
 .dashboard-header .page-title {
-    margin: 3px 0 6px;
+    margin: 3px 0;
     color: var(--navy);
     font-size: clamp(32px, 5vw, 44px);
     line-height: 1.1;
-    text-align: left;
+    text-align: center;
 }
 
 .dashboard-subtitle,
@@ -236,10 +236,10 @@ body {
 
 .radial-gauge::after {
     position: absolute;
-    top: 14px;
-    left: 14px;
-    width: 192px;
-    height: 192px;
+    top: 20px;
+    left: 20px;
+    width: 180px;
+    height: 180px;
     background: #fff;
     border-radius: 50%;
     box-shadow: inset 0 0 0 1px #edf1f4;
@@ -520,10 +520,10 @@ body {
     }
 
     .radial-gauge::after {
-        top: 13px;
-        left: 13px;
-        width: 174px;
-        height: 174px;
+        top: 18px;
+        left: 18px;
+        width: 164px;
+        height: 164px;
     }
 
     .gauge-range {
