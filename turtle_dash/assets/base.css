@@ -482,7 +482,7 @@ body {
 /* ─── Responsive ──────────────────────────────────────────────────────── */
 @media screen and (max-width: 900px) {
     .status-bar {
-        grid-template-columns: repeat(4, minmax(0, 1fr));
+        grid-template-columns: repeat(3, minmax(0, 1fr));
     }
 
     .controls-grid {
@@ -500,14 +500,13 @@ body {
         margin-bottom: 20px;
     }
 
-    .status-card,
     .controls-card,
     .auto-card {
         padding: 20px 16px;
     }
 
-    .status-bar {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
+    .status-card {
+        padding: 14px;
     }
 
     #gauge-container,
