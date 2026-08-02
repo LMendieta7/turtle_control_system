@@ -136,8 +136,16 @@
 }
 
 .period-dropdown {
-    flex: 0 0 100px;
+    flex: 0 0 112px;
     min-width: 0;
+}
+
+.period-dropdown .Select-value {
+    padding-right: 36px !important;
+}
+
+.period-dropdown .Select-arrow-zone {
+    width: 34px;
 }
 
 .schedule-summary {
