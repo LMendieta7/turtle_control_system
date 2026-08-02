@@ -21,13 +21,6 @@
     text-align: left;
 }
 
-.settings-eyebrow {
-    color: var(--blue);
-    font-size: 12px;
-    font-weight: 800;
-    letter-spacing: 0.14em;
-}
-
 .settings-subtitle,
 .card-description {
     color: var(--muted);

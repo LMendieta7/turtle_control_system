@@ -49,8 +49,7 @@ def layout():
 
     return html.Main([
         html.Div([
-            html.Div("TURTLE HABITAT", className="settings-eyebrow"),
-            html.H1("Tank Controls"),
+            html.H1("Settings"),
             html.P(
                 "Manage lighting and the daily schedule from one place.",
                 className="settings-subtitle",

@@ -2,8 +2,12 @@ from dash import html, dcc
 from dash import callback, Output, Input
 
 navbar = html.Div([
+    dcc.Link([
+        html.I(className="fa-solid fa-turtle nav-brand-icon"),
+        html.Span("Turtle SCADA", className="nav-brand-name"),
+    ], href="/", className="nav-brand"),
     html.Div([
-        dcc.Link("STATUS", href="/", id="link-dashboard", className="nav-link"),
+        dcc.Link("DASHBOARD", href="/", id="link-dashboard", className="nav-link"),
         dcc.Link("TRENDS", href="/trends", id="link-trends", className="nav-link"),
         dcc.Link("SETTINGS", href="/settings", id="link-settings", className="nav-link"),
     ], className="nav-links"),
