@@ -66,10 +66,6 @@ def layout():
     return html.Main([
         html.Div([
             html.H1("Settings"),
-            html.P(
-                "Lighting schedules and controls.",
-                className="settings-subtitle",
-            ),
         ], className="settings-header"),
 
         html.Div([
