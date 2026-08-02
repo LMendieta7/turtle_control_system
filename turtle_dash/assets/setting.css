@@ -135,23 +135,38 @@
     font-weight: 700;
 }
 
-.period-dropdown {
-    flex: 0 0 112px;
-    min-width: 0;
+.period-selector {
+    display: flex;
+    flex: 0 0 auto;
+    overflow: hidden;
+    border: 1px solid #c8d4de;
+    border-radius: 5px;
 }
 
-.period-dropdown .Select-value {
-    right: 34px !important;
-    padding-right: 6px !important;
+.period-selector-option {
+    display: grid;
+    min-width: 44px;
+    min-height: 34px;
+    place-items: center;
+    color: #536776;
+    background: #fff;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 700;
 }
 
-.period-dropdown .Select-value-label {
-    overflow: visible !important;
-    text-overflow: clip !important;
+.period-selector-option + .period-selector-option {
+    border-left: 1px solid #c8d4de;
 }
 
-.period-dropdown .Select-arrow-zone {
-    width: 34px;
+.period-selector-input {
+    position: absolute;
+    opacity: 0;
+}
+
+.period-selector-option:has(.period-selector-input:checked) {
+    color: #fff;
+    background: var(--blue);
 }
 
 .schedule-summary {
