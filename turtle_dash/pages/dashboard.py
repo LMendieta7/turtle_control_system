@@ -275,7 +275,7 @@ def update_gauges(n):
             numeric_value = 0.0
 
         percent = max(0.0, min(100.0, (numeric_value - 45.0) / 60.0 * 100.0))
-        style = {"--gauge-fill": f"{percent * 3.6:.1f}deg"}
+        style = {"--gauge-fill": f"{percent * 1.8:.1f}deg"}
         css_class = f"radial-gauge {gauge_type}-gauge"
         if stale:
             css_class += " gauge-stale"

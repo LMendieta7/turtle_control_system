@@ -218,23 +218,35 @@ body {
 .radial-gauge {
     --gauge-fill: 0deg;
     position: relative;
-    display: grid;
-    width: 184px;
-    height: 184px;
-    margin: 22px auto 8px;
-    place-items: center;
+    width: 220px;
+    height: 122px;
+    margin: 28px auto 8px;
+    overflow: hidden;
+    transition: --gauge-fill 0.35s ease;
+}
+
+.radial-gauge::before {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 220px;
+    height: 220px;
     background: conic-gradient(
+        from 270deg,
         var(--gauge-color) 0deg var(--gauge-fill),
-        #e8eef2 var(--gauge-fill) 360deg
+        #e8eef2 var(--gauge-fill) 180deg,
+        transparent 180deg 360deg
     );
     border-radius: 50%;
-    transition: --gauge-fill 0.35s ease;
+    content: "";
 }
 
 .radial-gauge::after {
     position: absolute;
-    width: 142px;
-    height: 142px;
+    top: 24px;
+    left: 24px;
+    width: 172px;
+    height: 172px;
     background: #fff;
     border-radius: 50%;
     box-shadow: inset 0 0 0 1px #edf1f4;
@@ -250,9 +262,13 @@ body {
 }
 
 .gauge-readout {
-    position: relative;
+    position: absolute;
     z-index: 1;
+    right: 0;
+    bottom: 4px;
+    left: 0;
     display: flex;
+    justify-content: center;
     align-items: baseline;
     color: var(--ink);
 }
@@ -273,7 +289,7 @@ body {
 .gauge-range {
     display: flex;
     justify-content: space-between;
-    width: 184px;
+    width: 220px;
     margin: 0 auto 12px;
     color: #8a98a2;
     font-size: 10px;
@@ -287,10 +303,9 @@ body {
     color: #a0adb5;
 }
 
-.radial-gauge.gauge-stale::before {
+.radial-gauge.gauge-stale .gauge-readout::after {
     position: absolute;
-    z-index: 2;
-    bottom: 36px;
+    top: 43px;
     padding: 3px 7px;
     color: #6f7e88;
     background: #edf1f4;
@@ -502,17 +517,24 @@ body {
     }
 
     .radial-gauge {
-        width: 170px;
-        height: 170px;
+        width: 200px;
+        height: 112px;
+    }
+
+    .radial-gauge::before {
+        width: 200px;
+        height: 200px;
     }
 
     .radial-gauge::after {
-        width: 130px;
-        height: 130px;
+        top: 22px;
+        left: 22px;
+        width: 156px;
+        height: 156px;
     }
 
     .gauge-range {
-        width: 170px;
+        width: 200px;
     }
 
     .auto-container {
