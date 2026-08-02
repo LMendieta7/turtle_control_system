@@ -1,7 +1,7 @@
 from services.monitoring import start_all_monitors
 import dash 
 from dash import dcc, html
-from navbar import navbar
+from components.navbar import navbar
 from services.db.database import Database
 import time
 from mqtt.client import start_mqtt          # To connect and run MQTT in background
