@@ -141,7 +141,13 @@
 }
 
 .period-dropdown .Select-value {
-    padding-right: 36px !important;
+    right: 34px !important;
+    padding-right: 6px !important;
+}
+
+.period-dropdown .Select-value-label {
+    overflow: visible !important;
+    text-overflow: clip !important;
 }
 
 .period-dropdown .Select-arrow-zone {
