@@ -1,4 +1,10 @@
 /* ─── Shared foundation ───────────────────────────────────────────────── */
+@property --gauge-fill {
+    syntax: "<angle>";
+    inherits: false;
+    initial-value: 0deg;
+}
+
 * {
     box-sizing: border-box;
 }
@@ -209,10 +215,90 @@ body {
     background: #e9f4fc;
 }
 
-#basking-gauge,
-#water-gauge {
-    width: 100%;
-    height: 225px;
+.radial-gauge {
+    --gauge-fill: 0deg;
+    position: relative;
+    display: grid;
+    width: 184px;
+    height: 184px;
+    margin: 22px auto 8px;
+    place-items: center;
+    background: conic-gradient(
+        var(--gauge-color) 0deg var(--gauge-fill),
+        #e8eef2 var(--gauge-fill) 360deg
+    );
+    border-radius: 50%;
+    transition: --gauge-fill 0.35s ease;
+}
+
+.radial-gauge::after {
+    position: absolute;
+    width: 142px;
+    height: 142px;
+    background: #fff;
+    border-radius: 50%;
+    box-shadow: inset 0 0 0 1px #edf1f4;
+    content: "";
+}
+
+.basking-gauge {
+    --gauge-color: #d76a45;
+}
+
+.water-gauge {
+    --gauge-color: #2378b8;
+}
+
+.gauge-readout {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: baseline;
+    color: var(--ink);
+}
+
+.gauge-value {
+    font-size: 38px;
+    font-weight: 750;
+    letter-spacing: -0.04em;
+}
+
+.gauge-unit {
+    margin-left: 3px;
+    color: #71828e;
+    font-size: 16px;
+    font-weight: 650;
+}
+
+.gauge-range {
+    display: flex;
+    justify-content: space-between;
+    width: 184px;
+    margin: 0 auto 12px;
+    color: #8a98a2;
+    font-size: 10px;
+}
+
+.radial-gauge.gauge-stale {
+    --gauge-color: #aeb9c0;
+}
+
+.radial-gauge.gauge-stale .gauge-readout {
+    color: #a0adb5;
+}
+
+.radial-gauge.gauge-stale::before {
+    position: absolute;
+    z-index: 2;
+    bottom: 36px;
+    padding: 3px 7px;
+    color: #6f7e88;
+    background: #edf1f4;
+    border-radius: 10px;
+    content: "STALE";
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
 }
 
 /* ─── Controls ────────────────────────────────────────────────────────── */
@@ -415,9 +501,18 @@ body {
         padding: 20px 16px 6px;
     }
 
-    #basking-gauge,
-    #water-gauge {
-        height: 210px;
+    .radial-gauge {
+        width: 170px;
+        height: 170px;
+    }
+
+    .radial-gauge::after {
+        width: 130px;
+        height: 130px;
+    }
+
+    .gauge-range {
+        width: 170px;
     }
 
     .auto-container {

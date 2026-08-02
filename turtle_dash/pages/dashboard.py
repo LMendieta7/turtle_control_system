@@ -1,6 +1,5 @@
 import dash
 from dash import dcc, html, Input, Output, State, callback_context, no_update
-import plotly.graph_objects as go
 import time
 
 from mqtt.client import mqtt_client, status, basking_sensor, water_sensor
@@ -50,7 +49,16 @@ def layout():
                         html.Div("Surface temperature", className="metric-description"),
                     ]),
                 ], className="metric-heading"),
-                dcc.Graph(id="basking-gauge", config={"displayModeBar": False, "responsive": True}),
+                html.Div([
+                    html.Div([
+                        html.Span(id="basking-gauge-value", className="gauge-value"),
+                        html.Span("°F", className="gauge-unit"),
+                    ], className="gauge-readout"),
+                ], id="basking-gauge", className="radial-gauge basking-gauge"),
+                html.Div([
+                    html.Span("45°F"),
+                    html.Span("105°F"),
+                ], className="gauge-range"),
             ], className="dashboard-card metric-card"),
             html.Section([
                 html.Div([
@@ -60,7 +68,16 @@ def layout():
                         html.Div("Tank temperature", className="metric-description"),
                     ]),
                 ], className="metric-heading"),
-                dcc.Graph(id="water-gauge", config={"displayModeBar": False, "responsive": True}),
+                html.Div([
+                    html.Div([
+                        html.Span(id="water-gauge-value", className="gauge-value"),
+                        html.Span("°F", className="gauge-unit"),
+                    ], className="gauge-readout"),
+                ], id="water-gauge", className="radial-gauge water-gauge"),
+                html.Div([
+                    html.Span("45°F"),
+                    html.Span("105°F"),
+                ], className="gauge-range"),
             ], className="dashboard-card metric-card"),
         ], id="gauge-container"),
 
@@ -239,49 +256,35 @@ def update_status_display(n):
 
 # ─── GAUGES ────────────────────────────────────────────────────────────
 @dash.callback(
-    [Output("basking-gauge","figure"),
-     Output("water-gauge",  "figure")],
+    Output("basking-gauge-value", "children"),
+    Output("basking-gauge", "style"),
+    Output("basking-gauge", "className"),
+    Output("water-gauge-value", "children"),
+    Output("water-gauge", "style"),
+    Output("water-gauge", "className"),
     Input("interval-update","n_intervals")
 )
 def update_gauges(n):
     bval, wval      = basking_sensor.get(),      water_sensor.get()
     b_stale, w_stale = basking_sensor.is_stale(15), water_sensor.is_stale(15)
 
-    bb = 'darkred'  if not b_stale else 'lightgray'
-    wb = 'darkblue' if not w_stale else 'lightgray'
-    bt = 'black'    if not b_stale else 'lightgray'
-    wt = 'black'    if not w_stale else 'lightgray'
+    def gauge_data(value, stale, gauge_type):
+        try:
+            numeric_value = float(value)
+        except (TypeError, ValueError):
+            numeric_value = 0.0
 
-    fig1 = go.Figure(go.Indicator(
-        mode="gauge+number", value=bval,
-        gauge={
-            'axis': {'range': [45, 105], 'tickvals': list(range(50, 106, 10)), 'tickfont': {'color': '#71828e'}},
-            'bar': {'color': bb},
-            'bgcolor': '#eef2f5',
-            'borderwidth': 0,
-        },
-        number={'suffix': "°F", 'font': {'size': 36, 'color': bt}}
-    ))
-    fig2 = go.Figure(go.Indicator(
-        mode="gauge+number", value=wval,
-        gauge={
-            'axis': {'range': [45, 105], 'tickvals': list(range(50, 106, 10)), 'tickfont': {'color': '#71828e'}},
-            'bar': {'color': wb},
-            'bgcolor': '#eef2f5',
-            'borderwidth': 0,
-        },
-        number={'suffix': "°F", 'font': {'size': 36, 'color': wt}}
-    ))
+        percent = max(0.0, min(100.0, (numeric_value - 45.0) / 60.0 * 100.0))
+        style = {"--gauge-fill": f"{percent * 3.6:.1f}deg"}
+        css_class = f"radial-gauge {gauge_type}-gauge"
+        if stale:
+            css_class += " gauge-stale"
+        display_value = f"{numeric_value:.1f}"
+        return display_value, style, css_class
 
-    for fig in (fig1, fig2):
-        fig.update_layout(
-            paper_bgcolor='rgba(0,0,0,0)',
-            plot_bgcolor='rgba(0,0,0,0)',
-            height=225,
-            margin={'l': 20, 'r': 20, 't': 15, 'b': 5},
-        )
-
-    return fig1, fig2
+    b_display, b_style, b_class = gauge_data(bval, b_stale, "basking")
+    w_display, w_style, w_class = gauge_data(wval, w_stale, "water")
+    return b_display, b_style, b_class, w_display, w_style, w_class
 
 
 
